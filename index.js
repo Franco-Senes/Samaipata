@@ -654,6 +654,7 @@ app.post('/api/admin/users/:id/suspend', authenticateToken, async (req, res) => 
     if (req.user.role !== 'admin') {
         return res.status(403).json({ error: 'Access denied.' });
     }
+
     const targetId = parseInt(req.params.id);
     const { is_suspended, suspension_reason, suspension_until } = req.body;
 
@@ -680,3 +681,4 @@ app.post('/api/admin/users/:id/suspend', authenticateToken, async (req, res) => 
         res.status(500).json({ error: 'Error changing suspension status.' });
     }
 });
+
