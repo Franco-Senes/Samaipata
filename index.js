@@ -649,3 +649,34 @@ app.post('/api/admin/users/:id/update', authenticateToken, async (req, res) => {
     }
 });
 
+// Suspend/Reactivate user
+app.post('/api/admin/users/:id/suspend', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Access denied.' });
+    }
+    const targetId = parseInt(req.params.id);
+    const { is_suspended, suspension_reason, suspension_until } = req.body;
+
+    try {
+        const target = await dbGet('SELECT * FROM users WHERE id = ?', [targetId]);
+        if (!target) return res.status(404).json({ error: 'User not found.' });
+
+        if (target.role === 'admin') {
+            return res.status(403).json({ error: 'Cannot suspend an Administrator account.' });
+        }
+
+        const suspendedVal = is_suspended ? 1 : 0;
+        const untilVal = is_suspended && suspension_until ? suspension_until : null;
+        const reasonVal = is_suspended ? (suspension_reason || 'Administrative suspension') : null;
+
+        await dbRun(`
+            UPDATE users 
+            SET is_suspended = ?, suspension_reason = ?, suspension_until = ?
+            WHERE id = ?
+        `, [suspendedVal, reasonVal, untilVal, targetId]);
+
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Error changing suspension status.' });
+    }
+});
