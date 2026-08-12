@@ -594,3 +594,57 @@ app.get('/api/admin/evaluations', authenticateToken, async (req, res) => {
         res.status(500).json({ error: 'Error loading evaluations.' });
     }
 });
+
+// Update user details
+app.post('/api/admin/users/:id/update', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Access denied.' });
+    }
+    const targetId = parseInt(req.params.id);
+    const { role, allowed_models, rate_limit_messages, rate_limit_tokens, can_manage_models, username, email, password, rate_limits_per_model } = req.body;
+
+    try {
+        const target = await dbGet('SELECT * FROM users WHERE id = ?', [targetId]);
+        if (!target) return res.status(404).json({ error: 'User not found.' });
+
+        // Cross-admin modification protection
+        if (target.role === 'admin' && req.user.id !== targetId) {
+            return res.status(403).json({ error: 'You do not have permission to modify the attributes of another Administrator.' });
+        }
+
+        // Limit rates formatting
+        const limitMsgs = rate_limit_messages === '' || rate_limit_messages === null ? null : parseInt(rate_limit_messages);
+        const limitTokens = rate_limit_tokens === '' || rate_limit_tokens === null ? null : parseInt(rate_limit_tokens);
+        const manageModels = can_manage_models ? 1 : 0;
+
+        // Process password change if provided
+        let passHash = target.password_hash;
+        if (password && password.trim() !== '') {
+            passHash = await bcrypt.hash(password.trim(), 12);
+        }
+
+        await dbRun(`
+            UPDATE users 
+            SET role = ?, allowed_models = ?, rate_limit_messages = ?, rate_limit_tokens = ?, can_manage_models = ?, username = ?, email = ?, password_hash = ?, rate_limits_per_model = ?
+            WHERE id = ?
+        `, [
+            role || target.role,
+            allowed_models !== undefined ? allowed_models : target.allowed_models,
+            limitMsgs,
+            limitTokens,
+            manageModels,
+            username || target.username,
+            email || target.email,
+            passHash,
+            rate_limits_per_model !== undefined ? rate_limits_per_model : target.rate_limits_per_model,
+            targetId
+        ]);
+
+        res.json({ success: true });
+    } catch (err) {
+        if (err.message && err.message.includes('UNIQUE constraint failed')) {
+            return res.status(400).json({ error: 'The username or email is already registered.' });
+        }
+        res.status(500).json({ error: 'Error updating user.' });
+    }
+});
