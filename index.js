@@ -412,18 +412,185 @@ app.get('/callback', async (req, res) => {
 // Admin stuff
 
 // list users
-app.get('/api/admin/users', authenticateToken, (req, res) => {
+app.get('/api/admin/users', authenticateToken, async (req, res) => {
     if (req.user.role !== 'admin') {
-        return res.status(403).json({ error:'Access denied. Administrator stuff are required. ' });
+        return res.status(403).json({ error: 'Access denied. Administrator privileges are required.' });
     }
     try {
         const users = await dbAll('SELECT id, username, email, avatar_url, role, is_suspended, suspension_reason, suspension_until, allowed_models, rate_limit_messages, rate_limit_tokens, can_manage_models, rate_limits_per_model FROM users ORDER BY created_at ASC');
         res.json(users);
     } catch (err) {
-        res.status(500),json({ error: 'Error loading.'})
+        res.status(500).json({ error: 'Error loading.' });
     }
 });
 
-app.get('api/admin/analytics', authenticateToken, (req, res) => {
+// Fetch Admin System Analytics
+app.get('/api/admin/analytics', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Access denied.' });
+    }
+    const days = parseInt(req.query.days) || 7;
+    const periodParam = `-${days} days`;
 
-})
+    try {
+        const msgRow = await dbGet('SELECT COUNT(*) as count FROM messages WHERE created_at >= datetime("now", ?)', [periodParam]);
+        const tokenRow = await dbGet('SELECT SUM(tokens) as count FROM messages WHERE created_at >= datetime("now", ?)', [periodParam]);
+        const chatRow = await dbGet('SELECT COUNT(*) as count FROM conversations WHERE created_at >= datetime("now", ?)', [periodParam]);
+        const userRow = await dbGet('SELECT COUNT(*) as count FROM users');
+
+        // Timeline: Daily message distribution
+        const timeline = await dbAll(`
+            SELECT date(created_at) as date_str, COUNT(*) as count 
+            FROM messages 
+            WHERE role = 'user' AND created_at >= datetime("now", ?) 
+            GROUP BY date(created_at) 
+            ORDER BY date(created_at) ASC
+        `, [periodParam]);
+
+        // Model Usage details
+        const modelUsage = await dbAll(`
+            SELECT LOWER(c.model_name) as model_name, COUNT(m.id) as msg_count, COUNT(DISTINCT c.user_id) as user_count, COUNT(DISTINCT c.id) as chat_count, SUM(m.tokens) as total_tokens
+            FROM messages m
+            JOIN conversations c ON m.conversation_id = c.id
+            WHERE m.created_at >= datetime("now", ?)
+            GROUP BY LOWER(c.model_name)
+            ORDER BY msg_count DESC
+        `, [periodParam]);
+
+        // User Activity details
+        const userActivity = await dbAll(`
+            SELECT u.username, u.email, u.avatar_url, COUNT(m.id) as msg_count, SUM(m.tokens) as total_tokens
+            FROM messages m
+            JOIN conversations c ON m.conversation_id = c.id
+            JOIN users u ON c.user_id = u.id
+            WHERE m.created_at >= datetime("now", ?)
+            GROUP BY u.id
+            ORDER BY msg_count DESC
+        `, [periodParam]);
+
+        res.json({
+            stats: {
+                messages: msgRow ? msgRow.count : 0,
+                tokens: tokenRow ? (tokenRow.count || 0) : 0,
+                chats: chatRow ? chatRow.count : 0,
+                users: userRow ? userRow.count : 0
+            },
+            timeline,
+            modelUsage,
+            userActivity
+        });
+    } catch (err) {
+        console.error('Failed to load admin analytics:', err);
+        res.status(500).json({ error: 'Error generating analytics.' });
+    }
+});
+
+// Submit User Model Feedback (Up/Down) & ELO rating modifier
+app.post('/api/feedback', authenticateToken, async (req, res) => {
+    const { model_name, rating, comment } = req.body;
+    if (!model_name || !rating) {
+        return res.status(400).json({ error: 'model_name and rating are required.' });
+    }
+    if (rating !== 'up' && rating !== 'down') {
+        return res.status(400).json({ error: 'Rating must be either up or down.' });
+    }
+
+    try {
+        // Log feedback
+        await dbRun(
+            'INSERT INTO feedback (user_id, username, model_name, rating, comment) VALUES (?, ?, ?, ?, ?)',
+            [req.user.id, req.user.username, model_name, rating, comment || null]
+        );
+
+        // Update ELO rating
+        const existingRating = await dbGet('SELECT * FROM model_ratings WHERE LOWER(model_name) = LOWER(?)', [model_name]);
+        let currentElo = 1200;
+        let wins = 0;
+        let losses = 0;
+
+        if (existingRating) {
+            currentElo = existingRating.elo;
+            wins = existingRating.wins;
+            losses = existingRating.losses;
+        }
+
+        if (rating === 'up') {
+            wins += 1;
+            currentElo += 15;
+        } else {
+            losses += 1;
+            currentElo -= 15;
+        }
+
+        if (existingRating) {
+            await dbRun(
+                'UPDATE model_ratings SET elo = ?, wins = ?, losses = ? WHERE LOWER(model_name) = LOWER(?)',
+                [currentElo, wins, losses, model_name]
+            );
+        } else {
+            await dbRun(
+                'INSERT INTO model_ratings (model_name, elo, wins, losses) VALUES (?, ?, ?, ?)',
+                [model_name, currentElo, wins, losses]
+            );
+        }
+
+        res.json({ success: true, new_elo: currentElo });
+    } catch (err) {
+        console.error('Feedback rating submission failed:', err);
+        res.status(500).json({ error: 'Error saving model rating.' });
+    }
+});
+
+// Fetch ELO Leaderboard & User feedback list
+app.get('/api/admin/evaluations', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Access denied.' });
+    }
+    try {
+        const ratingsRows = await dbAll('SELECT model_name, elo, wins, losses FROM model_ratings ORDER BY elo DESC');
+        
+        // Find all unique model names in conversation logs (to populate default 1200 ratings for untracked models)
+        const activeModelsRows = await dbAll('SELECT DISTINCT LOWER(model_name) as model_name FROM conversations');
+        
+        const leaderboardMap = new Map();
+        
+        // Seed active conversation models
+        activeModelsRows.forEach(row => {
+            const name = row.model_name;
+            if (name) {
+                leaderboardMap.set(name, {
+                    model_name: name,
+                    elo: 1200,
+                    wins: 0,
+                    losses: 0
+                });
+            }
+        });
+        
+        // Overlay explicit ELO votes
+        ratingsRows.forEach(row => {
+            const name = row.model_name.toLowerCase();
+            leaderboardMap.set(name, {
+                model_name: row.model_name,
+                elo: row.elo,
+                wins: row.wins,
+                losses: row.losses
+            });
+        });
+        
+        const leaderboard = Array.from(leaderboardMap.values()).sort((a, b) => b.elo - a.elo);
+        
+        const feedback = await dbAll(`
+            SELECT f.id, f.username, f.model_name, f.rating, f.comment, f.created_at, u.avatar_url 
+            FROM feedback f 
+            LEFT JOIN users u ON f.user_id = u.id 
+            ORDER BY f.created_at DESC 
+            LIMIT 50
+        `);
+
+        res.json({ leaderboard, feedback });
+    } catch (err) {
+        console.error('Failed to load evaluations:', err);
+        res.status(500).json({ error: 'Error loading evaluations.' });
+    }
+});
