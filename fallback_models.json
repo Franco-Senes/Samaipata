@@ -1,0 +1,274 @@
+[
+  {
+    "model_identifier": "llama3.3",
+    "model_name": "Llama 3.3",
+    "description": "New state-of-the-art 70B model from Meta, offering high performance for language tasks, reasoning, and coding.",
+    "pulls": 8500000,
+    "labels": ["70b"],
+    "last_updated": "2 weeks ago"
+  },
+  {
+    "model_identifier": "llama3.2",
+    "model_name": "Llama 3.2",
+    "description": "Meta's lightweight 1B and 3B models, optimized for low-latency on-device processing.",
+    "pulls": 9200000,
+    "labels": ["1b", "3b"],
+    "last_updated": "1 month ago"
+  },
+  {
+    "model_identifier": "llama3.2-vision",
+    "model_name": "Llama 3.2 Vision",
+    "description": "Multimodal 11B and 90B models from Meta, capable of visual reasoning and text generation.",
+    "pulls": 4800000,
+    "labels": ["11b", "90b"],
+    "last_updated": "1 month ago"
+  },
+  {
+    "model_identifier": "llama3.1",
+    "model_name": "Llama 3.1",
+    "description": "State-of-the-art Meta models available in 8B, 70B, and 405B parameter sizes, supporting 128K context window.",
+    "pulls": 18500000,
+    "labels": ["8b", "70b", "405b"],
+    "last_updated": "3 months ago"
+  },
+  {
+    "model_identifier": "llama3",
+    "model_name": "Llama 3",
+    "description": "Meta's highly capable openly available LLM suite offering superb code generation and reasoning.",
+    "pulls": 14000000,
+    "labels": ["8b", "70b"],
+    "last_updated": "6 months ago"
+  },
+  {
+    "model_identifier": "deepseek-r1",
+    "model_name": "DeepSeek-R1",
+    "description": "DeepSeek's first-generation reasoning models with performance matching OpenAI's o1.",
+    "pulls": 12000000,
+    "labels": ["1.5b", "7b", "8b", "14b", "32b", "70b", "671b"],
+    "last_updated": "1 week ago"
+  },
+  {
+    "model_identifier": "gemma3",
+    "model_name": "Gemma 3",
+    "description": "Google's latest family of lightweight, state-of-the-art open models built from the same research used to create Gemini.",
+    "pulls": 4300000,
+    "labels": ["270m", "4b", "12b", "27b"],
+    "last_updated": "3 days ago"
+  },
+  {
+    "model_identifier": "gemma2",
+    "model_name": "Gemma 2",
+    "description": "Google's highly efficient open model family featuring an advanced architecture for superior reasoning.",
+    "pulls": 5600000,
+    "labels": ["2b", "9b", "27b"],
+    "last_updated": "4 months ago"
+  },
+  {
+    "model_identifier": "gemma",
+    "model_name": "Gemma",
+    "description": "First-generation lightweight open models built by Google DeepMind.",
+    "pulls": 4100000,
+    "labels": ["2b", "7b"],
+    "last_updated": "9 months ago"
+  },
+  {
+    "model_identifier": "qwen2.5-coder",
+    "model_name": "Qwen 2.5 Coder",
+    "description": "Alibaba's premier code generation and reasoning model, highly optimized for developers.",
+    "pulls": 3100000,
+    "labels": ["0.5b", "1.5b", "3b", "7b", "14b", "32b"],
+    "last_updated": "1 month ago"
+  },
+  {
+    "model_identifier": "qwen2.5",
+    "model_name": "Qwen 2.5",
+    "description": "Alibaba's general reasoning and language understanding model family, with vast improvements in math and code.",
+    "pulls": 7400000,
+    "labels": ["0.5b", "1.5b", "3b", "7b", "14b", "32b", "72b"],
+    "last_updated": "1 month ago"
+  },
+  {
+    "model_identifier": "qwen",
+    "model_name": "Qwen",
+    "description": "Original multi-lingual large language model family developed by Alibaba Cloud.",
+    "pulls": 2300000,
+    "labels": ["0.5b", "1.8b", "4b", "7b", "14b", "72b"],
+    "last_updated": "10 months ago"
+  },
+  {
+    "model_identifier": "mistral",
+    "model_name": "Mistral",
+    "description": "Mistral - 7B dense transformer model, fast, high-quality, and highly customizable.",
+    "pulls": 6400000,
+    "labels": ["7b"],
+    "last_updated": "4 months ago"
+  },
+  {
+    "model_identifier": "mixtral",
+    "model_name": "Mixtral",
+    "description": "Mistral's high-quality sparse mixture of experts model (MoE) with open weights.",
+    "pulls": 3200000,
+    "labels": ["8x7b", "8x22b"],
+    "last_updated": "5 months ago"
+  },
+  {
+    "model_identifier": "mistral-nemo",
+    "model_name": "Mistral Nemo",
+    "description": "A state-of-the-art 12B parameter model built in collaboration with NVIDIA, featuring a 128K context window.",
+    "pulls": 1900000,
+    "labels": ["12b"],
+    "last_updated": "2 months ago"
+  },
+  {
+    "model_identifier": "phi4",
+    "model_name": "Phi-4",
+    "description": "Microsoft's state-of-the-art 14B parameter reasoning model focusing on high-quality synthetic data training.",
+    "pulls": 1500000,
+    "labels": ["14b"],
+    "last_updated": "3 weeks ago"
+  },
+  {
+    "model_identifier": "phi3",
+    "model_name": "Phi-3",
+    "description": "Microsoft's lightweight 3.8B and 14B parameter models showing exceptional reasoning benchmarks.",
+    "pulls": 2900000,
+    "labels": ["mini", "medium"],
+    "last_updated": "5 months ago"
+  },
+  {
+    "model_identifier": "codegemma",
+    "model_name": "CodeGemma",
+    "description": "Google's code-specialized models for code completion, generation, and multi-turn instruction chat.",
+    "pulls": 1800000,
+    "labels": ["2b", "7b"],
+    "last_updated": "6 months ago"
+  },
+  {
+    "model_identifier": "codellama",
+    "model_name": "Code Llama",
+    "description": "Meta's code-specialized model family built on top of Llama 2.",
+    "pulls": 4600000,
+    "labels": ["7b", "13b", "34b", "70b"],
+    "last_updated": "8 months ago"
+  },
+  {
+    "model_identifier": "command-r",
+    "model_name": "Command R",
+    "description": "Cohere's 35B model optimized for conversational interactions and Retrieval-Augmented Generation (RAG) tasks.",
+    "pulls": 1700000,
+    "labels": ["35b"],
+    "last_updated": "4 months ago"
+  },
+  {
+    "model_identifier": "command-r-plus",
+    "model_name": "Command R Plus",
+    "description": "Cohere's larger 104B model optimized for multilingual tasks, complex reasoning, and tool use.",
+    "pulls": 900000,
+    "labels": ["104b"],
+    "last_updated": "4 months ago"
+  },
+  {
+    "model_identifier": "aya",
+    "model_name": "Aya",
+    "description": "Cohere's multilingual model covering more than 23 languages, optimized for translation and dialogue.",
+    "pulls": 1200000,
+    "labels": ["8b", "35b"],
+    "last_updated": "2 months ago"
+  },
+  {
+    "model_identifier": "smollm2",
+    "model_name": "SmolLM2",
+    "description": "Hugging Face's family of lightweight models optimized for local on-device deployment.",
+    "pulls": 800000,
+    "labels": ["135m", "360m", "1.7b"],
+    "last_updated": "1 month ago"
+  },
+  {
+    "model_identifier": "tinyllama",
+    "model_name": "TinyLlama",
+    "description": "A compact 1.1B parameter Llama model pre-trained on 3 trillion tokens, ideal for fast and simple local tasks.",
+    "pulls": 3500000,
+    "labels": ["latest"],
+    "last_updated": "8 months ago"
+  },
+  {
+    "model_identifier": "starcoder2",
+    "model_name": "StarCoder 2",
+    "description": "The next-generation open code model trained on 80+ programming languages by BigCode.",
+    "pulls": 950000,
+    "labels": ["3b", "7b", "15b"],
+    "last_updated": "6 months ago"
+  },
+  {
+    "model_identifier": "dolphin-mixtral",
+    "model_name": "Dolphin Mixtral",
+    "description": "Uncensored MoE model based on Mixtral 8x7b, optimized by Eric Hartford.",
+    "pulls": 1500000,
+    "labels": ["8x7b", "8x22b"],
+    "last_updated": "6 months ago"
+  },
+  {
+    "model_identifier": "dolphin-llama3",
+    "model_name": "Dolphin Llama 3",
+    "description": "Eric Hartford's uncensored version of Meta's Llama 3 model.",
+    "pulls": 2100000,
+    "labels": ["8b", "70b"],
+    "last_updated": "5 months ago"
+  },
+  {
+    "model_identifier": "llava",
+    "model_name": "LLaVA",
+    "description": "Popular visual multimodal model bridging vision and language using CLIP vision encoders.",
+    "pulls": 3800000,
+    "labels": ["7b", "13b"],
+    "last_updated": "6 months ago"
+  },
+  {
+    "model_identifier": "minicpm-v",
+    "model_name": "MiniCPM-V",
+    "description": "An advanced visual model showing high performance in OCR, scene understanding, and multi-turn chat.",
+    "pulls": 600000,
+    "labels": ["latest"],
+    "last_updated": "1 month ago"
+  },
+  {
+    "model_identifier": "moondream",
+    "model_name": "Moondream",
+    "description": "A tiny multimodal model designed to run efficiently on mobile and edge devices.",
+    "pulls": 1400000,
+    "labels": ["latest"],
+    "last_updated": "2 weeks ago"
+  },
+  {
+    "model_identifier": "nomic-embed-text",
+    "model_name": "Nomic Embed Text",
+    "description": "Nomic's high-performance open-source text embedding model with an 8192 context length.",
+    "pulls": 2700000,
+    "labels": ["latest"],
+    "last_updated": "2 weeks ago"
+  },
+  {
+    "model_identifier": "bge-m3",
+    "model_name": "BGE-M3",
+    "description": "Beijing Academy of Artificial Intelligence's highly performant multilingual embedding model.",
+    "pulls": 900000,
+    "labels": ["latest"],
+    "last_updated": "3 months ago"
+  },
+  {
+    "model_identifier": "all-minilm",
+    "model_name": "All MiniLM",
+    "description": "Classic fast embedding model suitable for semantic search and simple document comparison.",
+    "pulls": 1600000,
+    "labels": ["latest"],
+    "last_updated": "7 months ago"
+  },
+  {
+    "model_identifier": "mxbai-embed-large",
+    "model_name": "Mxbai Embed Large",
+    "description": "Mixedbread AI's state-of-the-art text embedding model optimized for search relevance.",
+    "pulls": 1300000,
+    "labels": ["latest"],
+    "last_updated": "5 months ago"
+  }
+]

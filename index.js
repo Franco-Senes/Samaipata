@@ -682,3 +682,211 @@ app.post('/api/admin/users/:id/suspend', authenticateToken, async (req, res) => 
     }
 });
 
+app.delete('/api/images/generate', authenticateToken, async (req, res) => {
+    const { prompt } = req.body;
+    if (!prompt) return res.status(400).json({ error: 'Image prompt is required'});
+
+    try {
+        const seed = Math.floor(Math.random() * 1000000);
+        const cleanPrompt = prompt.replace(/[^a-zA-Z0-9\s,.-]/g, '');
+        const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=1024&height=1024&nologo=true&seed=${seed}`;
+
+        res.json({ url: imageUrl });
+    } catch (err) {
+        console.error('Image generation error:', err);
+        res.status(500).json({ error: 'Error generating image'});
+    }
+});
+
+//  hackclub models
+let cachedHackClubModels = null;
+let lastHackClubFetchTime = 0;
+
+async function getHackClubModels() {
+    const now = Date.now();
+    if (cachedHackClubModels && (now - lastHackClubFetchTime < 3600000)) {
+        return cachedHackClubModels;
+    }
+    try {
+        const ccontroller = new AbortController();
+        const timeoutId = setTimeout(() => ccontroller.abort(), 5000);
+        const res = await fetch('https://ai.hackclub.com/proxy/v1/models', { signal: ccontroller.signal });
+        clearTimeout(timeoutId);
+
+        if (res.ok) {
+            const data = await res.json();
+            if (data && Array.isArray(data.data)) {
+                cachedHackClubModels = data.data.map(m => ({
+                    id: m.id,
+                    name: m.id,
+                    displayName: m.name || m.id,
+                    description: m.description || '',
+                    context_length: m.context_length || 4096,
+                    is_hackclub: true
+                }));
+                lastHackClubFetchTime = now;
+                return cachedHackClubModels;
+            }
+        }
+    } catch (e) {
+        console.error("Failed to fetch hackclub models:", e.message);
+    }
+    return cachedHackClubModels || [];
+}
+
+app.get('/api/hackclub/models', authenticateToken, async (req, res) => {
+    try {
+        const models = await getHackClubModels();
+        res.json(models);
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to retrive models'})
+    }
+})
+
+// ollama
+app.get('/api/models', authenticateToken, async (req, res) => {
+    try {
+        let models = [];
+        try {
+            const response = await fetch(`${OLLAMA}/api/tags`);
+            if (response.ok) {
+                const data = await response.json();
+                models = data.models || [];
+            }
+        } catch (e) {
+            console.warn('Ollama offline, skipping local models');
+        }
+
+        const includeHackClub = req.query.hackclub === 'true';
+        if (includeHackClub) {
+            const hackClubModels = await getHackClubModels();
+            const mapped = hackClubModels.map(m => ({
+                name: m.name,
+                is_hackclub: true,
+                displayName: m.displayName
+            }));
+            models = [...models, ...mapped];
+        }
+
+        // Apply restrictions filter if currentUser allowed_models whitelist is set
+        if (req.user.role !== 'admin' && req.user.allowed_models) {
+            const allowed = req.user.allowed_models.split(',').map(m => m.trim().toLowerCase());
+            models = models.filter(model => {
+                return allowed.some(a => model.name.toLowerCase().startsWith(a));
+            });
+        }
+
+        res.json(models);
+    } catch (err) {
+        res.status(500).json({ error: 'Could not fetch models. Is Ollama running?' });
+    }
+});
+
+
+const FALLBACK_OLLAMA_MODELS = require('./fallback_models.json');
+
+function mapOllamaApiModelToCatalog(apiModel) {
+   const name = apiModel.model_identifier || apiModel.name || '';
+   const title = apiModel.model_name || apiModel.title || name.toUppercase();
+   const desc = apiModel.description || apiModel.desc || '';
+   const pulls = apiModel.pulls || 0;
+   const downloads = pulls > 1000000 ? (pulls / 1000000).toFixed(1) + 'M' : pulls > 1000 ? (pulls / 1000).toFixed(0) + 'K' : pulls.toString();
+   const lastUpdated = apiModel.last_updated_str || apiModel.last_updated || apiModel.updated || 'recently';
+   const tags = Array.isArray(apiModel.labels) ? apiModel.labels : (Array.isArray(apiModel.tags) ? apiModel.tags : ['latest']);
+
+   const variants = tags.map(tag => {
+    let size = 'N/A';
+    let context = '8K';
+    let input = 'Text';
+    const nameLower = name.toLowerCase();
+    if (nameLower.includes('llava') || nameLower.includes('vision') || nameLower.includes('moondream') || nameLower.includes('minicpm')) {
+        input = 'Text + Vision';
+    }
+    const tagLower = tag.toString().toLowerCase();
+        if (tagLower.includes('1.5b') || tagLower.includes('2b')) {
+            size = '1.1GB';
+            context = '32K';
+        } else if (tagLower.includes('3b') || tagLower.includes('4b')) {
+            size = '2.4GB';
+            context = '32K';
+        } else if (tagLower.includes('7b') || tagLower.includes('8b') || tagLower.includes('9b')) {
+            size = '4.7GB';
+            context = '128K';
+        } else if (tagLower.includes('14b') || tagLower.includes('12b')) {
+            size = '9.0GB';
+            context = '128K';
+        } else if (tagLower.includes('32b')) {
+            size = '20GB';
+            context = '128K';
+        } else if (tagLower.includes('70b') || tagLower.includes('72b')) {
+            size = '42GB';
+            context = '128K';
+        } else if (tagLower.includes('671b')) {
+            size = '404GB';
+            context = '128K';
+        } else if (tagLower.includes('270m') || tagLower.includes('500m') || tagLower.includes('0.5b')) {
+            size = '350MB';
+            context = '8K';
+        } else {
+            size = '4.5GB';
+            context = '32K';
+        }
+        return   { tag: tag.toString(), size, context, input };
+   });
+
+   return {
+    name,
+    title,
+    desc,
+    downloads,
+    updated: lastUpdated,
+    category: name.includes('embed') ? 'Embeddings' : name.includes('vision') || name.includes('llava') ? 'Vision' : 'General',
+    variants
+   };
+}
+
+//marketplace fetch
+app.get('/api/marketplace/models', authenticateToken, async (req, res) => {
+    // try first api akazwz cloudflare worker
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTImeout(() => controller.abort(), 5000);
+        const response = await fetch('https://ollama-models.zwz.workers.dev', { signal: controller.signal });
+        clearTimeout(timeoutId);
+
+        if (!response.ok) throw new Error('Worker returned HTTP ' + response.status);
+        const data = await response.json();
+        const rawModels = Array.isArray(data) ? data : [];
+        if (rawModels.length === 0) throw new Error('Empty model array from worker');
+
+        console.log(`Successfully fetched ${rawModels.length} models from akazwk`)
+        const mapped = rawModels.map(mapAkazwzModelToCatalog);
+        return res.json(mapped);
+    } catch (err) {
+        console.warn('[1] Akazwz didnt work', err.message)
+    }
+
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const response = await fetch('https://ollamadb.dev/api/v1/models?limit=1000', { signal: controller.signal });
+        clearTimeout(timeoutId);
+
+        if (!response.ok) throw new Error('API responded with error code ' + response.status);
+        const data = await response.json();
+        
+        const rawModels = Array.isArray(data) ? data : (data.models || []);
+        if (rawModels.length === 0) throw new Error('Empty model array received');
+
+        console.log(`Successfully fetched ${rawModels.length} models from frefrik OllamaDB API`);
+        const mapped = rawModels.map(mapOllamaApiModelToCatalog);
+        return res.json(mapped);
+    } catch (err) {
+        console.warn(' [2[ Ollama Models api didnt work switching to fallback models', err.message);
+    }
+
+    // 3. Local fallback database
+    const mappedFallback = FALLBACK_OLLAMA_MODELS.map(mapOllamaApiModelToCatalog);
+    res.json(mappedFallback);
+});
+
