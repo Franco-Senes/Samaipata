@@ -2,10 +2,11 @@
   "name": "samaipata",
   "version": "1.0.0",
   "description": "Local AI chat client and server using Ollama",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "start": "node index.js",
+    "dev": "node index.js",
+    "test": "node --test test/*.test.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

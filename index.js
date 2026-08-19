@@ -102,6 +102,30 @@ function createTables() {
             )
         `);
 
+        // messages
+        db.run(`
+            CREATE TABLE IF NOT EXISTS messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                conversation_id INTEGER,
+                role TEXT,
+                content TEXT,
+                tokens INTEGER DEFAULT 0,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(conversation_id) REFERENCES conversations(id) ON DELETE CASCADE
+            )
+        `);
+
+        // memories
+        db.run(`
+            CREATE TABLE IF NOT EXISTS memories (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                fact TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        `);
+
         // Model Ratings Table (Elo classification)
         db.run(`
             CREATE TABLE IF NOT EXISTS model_ratings (
@@ -207,34 +231,35 @@ const authenticateToken = async (req, res, next) => {
 // Auth
 
 // Signup
-app.post('api/auth/register', async (req, res) => {
-   const { username, email, password } = req.body;
-   if (!username || !email || !password) {
-       return res.status(400).json({ error: 'All fields are required' });
-   }
-   try {
-       const passwordHash = await bcrypt.hash(password, 12);
-       const countRow = await dbGet('SELECT COUNT(*) as count FROM users');
-       const role = countRow.count === 0 ? 'admin' : 'user';
+app.post('/api/auth/register', async (req, res) => {
+    const { username, email, password } = req.body;
+    if (!username || !email || !password) {
+        return res.status(400).json({ error: 'All fields are required' });
+    }
+    try {
+        const passwordHash = await bcrypt.hash(password, 12);
+        const countRow = await dbGet('SELECT COUNT(*) as count FROM users');
+        const role = countRow.count === 0 ? 'admin' : 'user';
 
-       const result = await dbRun(
-           'INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)',
-           [username, email, passwordHash, role]
-       );
-       const token = jwt.sign({ id: result.lastID, email, role }, JWT_SECRET, { expiresIn: '7d' });
-       res.cookie('samaipata_session', token, {
-           httpOnly: true,
-           secure: false, // ts will never be running through https
-           sameSite: 'lax',
-           path: '/',
-           maxAge: 7 * 24 * 60 * 60 * 1000
-       });
-   } catch (err) {
-       if (err.message.includes('UNIQUE constraint failed')) {
-           return res.status(400).json({ error: 'Username or email already exists' });
-       }
-       res.status(500).json({ error: 'Server error during registration.' });
-   }
+        const result = await dbRun(
+            'INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)',
+            [username, email, passwordHash, role]
+        );
+        const token = jwt.sign({ id: result.lastID, email, role }, JWT_SECRET, { expiresIn: '7d' });
+        res.cookie('samaipata_session', token, {
+            httpOnly: true,
+            secure: false, // ts will never be running through https
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+        res.status(201).json({ token, id: result.lastID, username, email, role });
+    } catch (err) {
+        if (err.message && err.message.includes('UNIQUE constraint failed')) {
+            return res.status(400).json({ error: 'Username or email already exists' });
+        }
+        res.status(500).json({ error: 'Server error during registration.' });
+    }
 });
 
 // Rate Limiter
@@ -254,15 +279,15 @@ const loginLimiter = (req, res, next) => {
 
 // Login
 
-app.post('api/auth/login', loginLimiter, async (req, res) => {
-    const {email, password} = req.body;
+app.post('/api/auth/login', loginLimiter, async (req, res) => {
+    const { email, password } = req.body;
     if (!email || !password) {
-        return res.status(400).json({error: 'All fields are required'});
+        return res.status(400).json({ error: 'All fields are required' });
     }
     try {
         const user = await dbGet('SELECT * FROM users WHERE email = ?', [email]);
         if (!user) {
-            return res.status(400).json({error: 'User not found.'});
+            return res.status(400).json({ error: 'User not found.' });
         }
 
         // suspension logic
@@ -271,8 +296,8 @@ app.post('api/auth/login', loginLimiter, async (req, res) => {
             const until = user.suspension_until ? new Date(user.suspension_until) : null;
             if (!until || until > now) {
                 const reason = user.suspension_reason || 'No reason provided';
-                const timeStr = until ? ` until $until.toLocaleString()}` : ' permanent';
-                return res.status(403).json({error: `Your account is suspended${timeStr}. Reason: ${reason}`});
+                const timeStr = until ? ` until ${until.toLocaleString()}` : ' permanent';
+                return res.status(403).json({ error: `Your account is suspended${timeStr}. Reason: ${reason}` });
             } else {
                 // no more suspension for your bradar, lemme reinstalate you
                 await dbRun('UPDATE users SET is_suspended = 0, suspension_reason = NULL, suspension_until = NULL WHERE id = ?', [user.id]);
@@ -284,14 +309,14 @@ app.post('api/auth/login', loginLimiter, async (req, res) => {
             return res.status(400).json({ error: 'Password incorrect.' });
         }
         // sign in user
-        const token = jwt.sign({ id: user.id, emai: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+        const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
         // create cookie
         res.cookie('samaipata_session', token, {
-        httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 7 * 24 * 60 * 60 * 1000
+            httpOnly: true,
+            secure: false,
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 7 * 24 * 60 * 60 * 1000
         });
         res.json({ token, id: user.id, username: user.username, email: user.email, avatar_url: user.avatar_url, role: user.role });
     } catch (err) {
@@ -301,9 +326,9 @@ app.post('api/auth/login', loginLimiter, async (req, res) => {
 
 // Logout
 
-app.post('api/auth/logout', (req, res) => {
+app.post('/api/auth/logout', (req, res) => {
     res.clearCookie('samaipata_session', { path: '/' });
-    res.json({ message: 'Signed out succesfully '});
+    res.json({ message: 'Signed out succesfully' });
 });
 
 // Me
@@ -682,9 +707,9 @@ app.post('/api/admin/users/:id/suspend', authenticateToken, async (req, res) => 
     }
 });
 
-app.delete('/api/images/generate', authenticateToken, async (req, res) => {
+app.post('/api/images/generate', authenticateToken, async (req, res) => {
     const { prompt } = req.body;
-    if (!prompt) return res.status(400).json({ error: 'Image prompt is required'});
+    if (!prompt) return res.status(400).json({ error: 'Image prompt is required' });
 
     try {
         const seed = Math.floor(Math.random() * 1000000);
@@ -694,7 +719,7 @@ app.delete('/api/images/generate', authenticateToken, async (req, res) => {
         res.json({ url: imageUrl });
     } catch (err) {
         console.error('Image generation error:', err);
-        res.status(500).json({ error: 'Error generating image'});
+        res.status(500).json({ error: 'Error generating image' });
     }
 });
 
@@ -708,9 +733,9 @@ async function getHackClubModels() {
         return cachedHackClubModels;
     }
     try {
-        const ccontroller = new AbortController();
-        const timeoutId = setTimeout(() => ccontroller.abort(), 5000);
-        const res = await fetch('https://ai.hackclub.com/proxy/v1/models', { signal: ccontroller.signal });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const res = await fetch('https://ai.hackclub.com/proxy/v1/models', { signal: controller.signal });
         clearTimeout(timeoutId);
 
         if (res.ok) {
@@ -739,9 +764,9 @@ app.get('/api/hackclub/models', authenticateToken, async (req, res) => {
         const models = await getHackClubModels();
         res.json(models);
     } catch (e) {
-        res.status(500).json({ error: 'Failed to retrive models'})
+        res.status(500).json({ error: 'Failed to retrive models' });
     }
-})
+});
 
 // ollama
 app.get('/api/models', authenticateToken, async (req, res) => {
@@ -787,7 +812,7 @@ const FALLBACK_OLLAMA_MODELS = require('./fallback_models.json');
 
 function mapOllamaApiModelToCatalog(apiModel) {
    const name = apiModel.model_identifier || apiModel.name || '';
-   const title = apiModel.model_name || apiModel.title || name.toUppercase();
+   const title = apiModel.model_name || apiModel.title || name.toUpperCase();
    const desc = apiModel.description || apiModel.desc || '';
    const pulls = apiModel.pulls || 0;
    const downloads = pulls > 1000000 ? (pulls / 1000000).toFixed(1) + 'M' : pulls > 1000 ? (pulls / 1000).toFixed(0) + 'K' : pulls.toString();
@@ -803,28 +828,31 @@ function mapOllamaApiModelToCatalog(apiModel) {
         input = 'Text + Vision';
     }
     const tagLower = tag.toString().toLowerCase();
-        if (tagLower.includes('1.5b') || tagLower.includes('2b')) {
-            size = '1.1GB';
-            context = '32K';
-        } else if (tagLower.includes('3b') || tagLower.includes('4b')) {
-            size = '2.4GB';
-            context = '32K';
-        } else if (tagLower.includes('7b') || tagLower.includes('8b') || tagLower.includes('9b')) {
-            size = '4.7GB';
+        if (tagLower.includes('671b')) {
+            size = '404GB';
             context = '128K';
-        } else if (tagLower.includes('14b') || tagLower.includes('12b')) {
-            size = '9.0GB';
-            context = '128K';
-        } else if (tagLower.includes('32b')) {
-            size = '20GB';
+        } else if (tagLower.includes('405b')) {
+            size = '240GB';
             context = '128K';
         } else if (tagLower.includes('70b') || tagLower.includes('72b')) {
             size = '42GB';
             context = '128K';
-        } else if (tagLower.includes('671b')) {
-            size = '404GB';
+        } else if (tagLower.includes('32b')) {
+            size = '20GB';
             context = '128K';
-        } else if (tagLower.includes('270m') || tagLower.includes('500m') || tagLower.includes('0.5b')) {
+        } else if (tagLower.includes('14b') || tagLower.includes('12b') || tagLower.includes('13b') || tagLower.includes('11b')) {
+            size = '9.0GB';
+            context = '128K';
+        } else if (tagLower.includes('7b') || tagLower.includes('8b') || tagLower.includes('9b')) {
+            size = '4.7GB';
+            context = '128K';
+        } else if (tagLower.includes('3b') || tagLower.includes('4b')) {
+            size = '2.4GB';
+            context = '32K';
+        } else if (tagLower.includes('1.5b') || tagLower.includes('2b')) {
+            size = '1.1GB';
+            context = '32K';
+        } else if (tagLower.includes('270m') || tagLower.includes('500m') || tagLower.includes('0.5b') || tagLower.includes('1b')) {
             size = '350MB';
             context = '8K';
         } else {
@@ -845,12 +873,74 @@ function mapOllamaApiModelToCatalog(apiModel) {
    };
 }
 
+function mapAkazwzModelToCatalog(item) {
+    const name = item.name || '';
+    const title = name.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    const desc = item.description || '';
+    const downloads = 'N/A';
+    const lastUpdated = 'recently';
+    const tags = Array.isArray(item.tags) ? item.tags : ['latest'];
+
+    const variants = tags.map(tag => {
+        let size = 'N/A';
+        let context = '8K';
+        let input = 'Text';
+        const nameLower = name.toLowerCase();
+        if (nameLower.includes('llava') || nameLower.includes('vision') || nameLower.includes('moondream') || nameLower.includes('minicpm')) {
+            input = 'Text + Vision';
+        }
+        const tagLower = tag.toString().toLowerCase();
+        if (tagLower.includes('671b')) {
+            size = '404GB';
+            context = '128K';
+        } else if (tagLower.includes('405b')) {
+            size = '240GB';
+            context = '128K';
+        } else if (tagLower.includes('70b') || tagLower.includes('72b')) {
+            size = '42GB';
+            context = '128K';
+        } else if (tagLower.includes('32b')) {
+            size = '20GB';
+            context = '128K';
+        } else if (tagLower.includes('14b') || tagLower.includes('12b') || tagLower.includes('13b') || tagLower.includes('11b')) {
+            size = '9.0GB';
+            context = '128K';
+        } else if (tagLower.includes('7b') || tagLower.includes('8b') || tagLower.includes('9b')) {
+            size = '4.7GB';
+            context = '128K';
+        } else if (tagLower.includes('3b') || tagLower.includes('4b')) {
+            size = '2.4GB';
+            context = '32K';
+        } else if (tagLower.includes('1.5b') || tagLower.includes('2b')) {
+            size = '1.1GB';
+            context = '32K';
+        } else if (tagLower.includes('270m') || tagLower.includes('500m') || tagLower.includes('0.5b') || tagLower.includes('1b')) {
+            size = '350MB';
+            context = '8K';
+        } else {
+            size = '4.5GB';
+            context = '32K';
+        }
+        return { tag: tag.toString(), size, context, input };
+    });
+
+    return {
+        name,
+        title,
+        desc,
+        downloads,
+        updated: lastUpdated,
+        category: name.includes('embed') ? 'Embeddings' : name.includes('vision') || name.includes('llava') ? 'Vision' : 'General',
+        variants
+    };
+}
+
 //marketplace fetch
 app.get('/api/marketplace/models', authenticateToken, async (req, res) => {
     // try first api akazwz cloudflare worker
     try {
         const controller = new AbortController();
-        const timeoutId = setTImeout(() => controller.abort(), 5000);
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
         const response = await fetch('https://ollama-models.zwz.workers.dev', { signal: controller.signal });
         clearTimeout(timeoutId);
 
@@ -859,11 +949,11 @@ app.get('/api/marketplace/models', authenticateToken, async (req, res) => {
         const rawModels = Array.isArray(data) ? data : [];
         if (rawModels.length === 0) throw new Error('Empty model array from worker');
 
-        console.log(`Successfully fetched ${rawModels.length} models from akazwk`)
+        console.log(`Successfully fetched ${rawModels.length} models from akazwk`);
         const mapped = rawModels.map(mapAkazwzModelToCatalog);
         return res.json(mapped);
     } catch (err) {
-        console.warn('[1] Akazwz didnt work', err.message)
+        console.warn('[1] Akazwz didnt work', err.message);
     }
 
     try {
@@ -890,3 +980,238 @@ app.get('/api/marketplace/models', authenticateToken, async (req, res) => {
     res.json(mappedFallback);
 });
 
+app.delete('/api/models/:name', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'admin' && !req.user.can_manage_models) {
+        return res.status(403).json({ error: 'You do not have permision to delete a model' });
+    }
+    const { name } = req.params;
+    try {
+        const response = await fetch(`${OLLAMA}/api/delete`, {
+            method: 'DELETE',
+            body: JSON.stringify({ model: name })
+        });
+        if (response.ok) {
+            res.json({ message: `Model ${name} deleted successfully` });
+        } else {
+            const errText = await response.text();
+            res.status(400).json({ error: errText });
+        }
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to delete model.' });
+    }
+});
+
+app.post('/api/models/pull', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'admin' && !req.user.can_manage_models) {
+        return res.status(403).json({ error: 'You dont have permission to download models'});
+
+    }
+
+    const { name } = req.body;
+    if (!name) return res.status(403).json({ error: 'Model name is required' });
+    
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    try {
+        const response = await fetch(`${OLLAMA}/api/pull`, {
+          method: 'POST',
+          body: JSON.stringify({ name, stream: true })
+        });
+
+        if (!response.ok) {
+            const errText = await response.text();
+            res.write(`data: ${JSON.stringify({ error: errText })}\n\n`);
+            return res.end();
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop();
+
+            for (const line of lines) {
+                if (line.trim()) {
+                    res.write(`data: ${line}\n\n`);
+                }
+            }
+        }
+        res.write(`data: ${JSON.stringify({ completed: true })}\n\n`);
+        res.end();
+    } catch (err) {
+        res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
+        res.end();
+    }
+});
+
+async function performWebSearch(query) {
+    console.log('[DuckduckGo] Searching for:', query);
+    try {
+        const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+        const response = await fetch (url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            }
+        });
+        if (!response.ok) return [];
+        const html = await response.text();
+        const results = [];
+
+        const resultBlockRegex = /<div class="result results_links[^"]*web-result\s*">([\s\S]*?)<\/div>\s*<\/div>/g;
+        let match;
+        let limit = 4;
+
+        while ((match = resultBlockRegex.exec(html)) !== null && results.length < limit) {
+            const block = match[1];
+
+            const titleMatch = /<a class="result__a"[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/.exec(block);
+            const snippetMatch = /<a class="result__snippet"[^>]*>([\s\S]*?)<\/a>/.exec(block);
+
+            if (titleMatch) {
+                const link = titleMatch[1];
+                const title = titleMatch[2].replace(/<[^>]*>/g, '').trim();
+                const snippet = snippetMatch ? snippetMatch[1].replace(/<[^>]*>/g, '').trim() : '';
+                results.push({ title, link, snippet });
+            }
+        }
+        return results;
+    } catch (err) {
+        console.error('[DuckduckGo] Failed search:', err);
+        return [];
+    }
+}
+
+async function getIpLocation(ip) {
+    try {
+        let queryIp = ip;
+        if (ip === '::1' || ip == '127.0.0.1' || ip === '::ffff:127.0.0.1' || ip.startsWith('192.168.') || ip.startsWith('10.') || ip.startsWith('172.16.')) {
+            const ipRes = await fetch('https://api.ipify.org?format=json');
+            if (ipRes.ok) {
+                const ipData = await ipRes.json();
+                queryIp = ipData.ip;
+            }
+        }
+
+        const geoRes = await fetch(`https://freeipapi.com/api/json/${queryIp}`);
+        if (geoRes.ok) {
+            const geoData = await geoRes.json();
+            return {
+                ip: queryIp,
+                city: geoData.cityName || 'City not found',
+                region: geoData.regionName || 'Region not found',
+                country: geoData.countryName || 'County not found'
+            };
+        }
+    } catch (err) {
+        console.error('[Ip Localization] Failed to get location:', err);
+    }
+    return {ip, city: 'Unknown', region: 'Unknown', country: 'Unknown'};
+}   
+
+async function extractAndStoreMemory(userId, userMsg, aiResponse, modelName) {
+    try {
+        let extractorModel = modelName;
+        if (modelName.toLowerCase().startsWith('gemini-') || modelName.includes('/')) {
+            try {
+                const ollamaRes = await fetch(`${OLLAMA}/api/tags`);
+                if (ollamaRes.ok) {
+                    const data = await ollamaRes.json();
+                    if (data.models && data.models.length > 0) {
+                        extractorModel = data.models[0].name;
+                    }
+                }
+            } catch (e) {
+                // Ignore fallback tag load error
+            }
+        }
+
+        const prompt = `Analyze the conversation turn. Extract key details or facts about the user (e.g. name, age, likes/dislikes, job, location, hobbies). Write them as short, singular, factual sentences starting with "The user...". If no new details are shared, output nothing. Do not repeat existing facts.
+User: ${userMsg}
+Assistant: ${aiResponse}
+Facts:`;
+
+        const response = await fetch(`${OLLAMA}/api/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: extractorModel,
+                messages: [{ role: 'user', content: prompt }],
+                stream: false
+            })
+        });
+
+        if (!response.ok) return;
+        const data = await response.json();
+        const extracted = data.message.content.trim();
+
+        if (extracted && extracted.length > 5 && !extracted.includes("nothing") && !extracted.includes("nothing new")) {
+            const lines = extracted.split('\n').map(l => l.replace(/^[-*•\d.\s]+/, '').trim()).filter(l => l.length > 5);
+            for (const line of lines) {
+                if (line.toLowerCase().startsWith('the user')) {
+                    // Check if fact already exists to prevent duplicate memory clutter
+                    const exists = await dbGet('SELECT id FROM memories WHERE user_id = ? AND fact = ?', [userId, line]);
+                    if (!exists) {
+                        await dbRun('INSERT INTO memories (user_id, fact) VALUES (?, ?)', [userId, line]);
+                        console.log(`[Memory Saved] user ${userId}: ${line}`);
+                    }
+                }
+            }
+        }
+    } catch (err) {
+        console.error('[Memory Extraction] Failed to extract memory:', err);
+    }
+}
+
+async function retrieveMemories(userId) {
+    try {
+        const rows = await dbAll('SELECT fact FROM memories WHERE user_id = ? ORDER BY created_at DESC LIMIT 50', [userId]);
+        if (rows.length === 0) return '';
+        return rows.map(r => `- ${r.fact}`).join('\n');
+    } catch (err) {
+        return '';
+    }
+}
+
+app.get('/api/conversations', authenticateToken, async (req, res) => {
+    try {
+        const sql = `
+        SELECT c.*, MAX(m.created_at) as last_message_time
+        FROM conversations c
+        LEFT JOIN messages m ON c.id = m.conversation_id
+        WHERE c.user_id = ?
+        GROUP BY c.id
+        ORDER BY COALESCE(last_message_time, c.created_at) DESC
+        `;
+        const list = await dbAll(sql, [req.user.id]);
+        res.json(list);
+    } catch (err) {
+        console.error('[Conversations] Failed to retrieve:', err);
+        res.status(500).json({ error: 'Failed to retrieve conversations.' });
+    }
+});
+
+
+if (require.main === module) {
+    app.listen(PORT, '0.0.0.0', () => {
+        console.log(`Samaipata server is running on http://localhost:${PORT}`);
+    });
+}
+
+module.exports = {
+    app,
+    db,
+    dbGet,
+    dbAll,
+    dbRun,
+    mapOllamaApiModelToCatalog,
+    mapAkazwzModelToCatalog,
+    getHackClubModels,
+    FALLBACK_OLLAMA_MODELS,
+    JWT_SECRET
+};
