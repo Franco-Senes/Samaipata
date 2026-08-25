@@ -86,9 +86,13 @@ function createTables() {
                 rate_limit_tokens INTEGER DEFAULT NULL,
                 can_manage_models INTEGER DEFAULT 1,
                 rate_limits_per_model TEXT DEFAULT NULL,
+                hackclub_api_key TEXT DEFAULT NULL,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         `);
+
+        // Migration to add hackclub_api_key if missing
+        db.run(`ALTER TABLE users ADD COLUMN hackclub_api_key TEXT`, () => {});
 
         // conversations
         db.run(`
@@ -332,11 +336,27 @@ app.post('/api/auth/logout', (req, res) => {
 });
 
 // Me
-app.get('/api/auth/me', authenticateToken, (req, res) => {
+app.get('/api/auth/me', authenticateToken, async (req, res) => {
+    let userHackClubKey = null;
+    try {
+        const userRow = await dbGet('SELECT hackclub_api_key FROM users WHERE id = ?', [req.user.id]);
+        userHackClubKey = userRow && userRow.hackclub_api_key;
+    } catch (e) {}
+
     res.json({
        ...req.user,
-       hasHackClubApiKey: !!(process.env.HACKCLUB_API_KEY || HACKCLUB_API_KEY)
+       hasHackClubApiKey: !!(userHackClubKey || process.env.HACKCLUB_API_KEY || HACKCLUB_API_KEY)
     });
+});
+
+app.post('/api/user/hackclub-key', authenticateToken, async (req, res) => {
+    const { apiKey } = req.body;
+    try {
+        await dbRun('UPDATE users SET hackclub_api_key = ? WHERE id = ?', [apiKey ? apiKey.trim() : null, req.user.id]);
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
 });
 
 // Zero Oauth
@@ -1132,9 +1152,9 @@ async function extractAndStoreMemory(userId, userMsg, aiResponse, modelName) {
         }
 
         const prompt = `Analyze the conversation turn. Extract key details or facts about the user (e.g. name, age, likes/dislikes, job, location, hobbies). Write them as short, singular, factual sentences starting with "The user...". If no new details are shared, output nothing. Do not repeat existing facts.
-User: ${userMsg}
-Assistant: ${aiResponse}
-Facts:`;
+        User: ${userMsg}
+        Assistant: ${aiResponse}
+        Facts:`;
 
         const response = await fetch(`${OLLAMA}/api/chat`, {
             method: 'POST',
@@ -1196,10 +1216,485 @@ app.get('/api/conversations', authenticateToken, async (req, res) => {
     }
 });
 
+app.post('/api/conversations/import', authenticateToken, async (req, res) => {
+    const { title, model_name, messages } = req.body;
+    if (!title || !model_name || !Array.isArray(messages)) {
+        return res.status(400).json({ error: 'Invalid backup data format'})
+    }
+
+    try {
+        const convResult = await dbRun(
+            'INSERT INTO conversations (user_id, title, model_name) VALUES (?,?,?)',
+            [req.user.id, title, model_name]
+        );
+        const conversationId = convResult.lastID;
+
+        for (const msg of messages) {
+            await dbRun(
+                'INSERT INTO messages (conversation_id, role, content) VALUES (?, ?, ?)',
+                [conversationId, msg.role, msg.content]
+            );
+        }
+        res.json({ success: true, conversationId: conversationId });
+    } catch (err) {
+        console.error('Import conversation error:', err);
+        res.status(500).json({ error: 'Failed to import conversation.' });
+    }
+});
+
+app.get('/api/conversations/:id', authenticateToken, async (req, res) => {
+    try {
+        const conversation = await dbGet('SELECT * FROM conversations WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
+        if (!conversation) {
+            return res.status(404).json({ error: 'Conversation not found.' });
+        }
+
+        const messages = await dbAll('SELECT role, content, created_at FROM messages WHERE conversation_id = ? ORDER BY created_at ASC', [req.params.id]);
+        res.json({ conversation, messages });
+    } catch (err) {
+        console.error('Failed to retrieve conversation:', err);
+        res.status(500).json({ error: 'Failed to retrieve conversation.' });
+    }
+});
+
+app.delete('/api/conversations/:id', authenticateToken, async (req, res) => {
+    try {
+        const conversation = await dbGet('SELECT * FROM conversations WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
+        if (!conversation) {
+            return res.status(404).json({ error: 'Conversation not found.' });
+        }
+        await dbRun('DELETE FROM conversations WHERE id = ?', [req.params.id]);
+        await dbRun('DELETE FROM messages WHERE conversation_id = ?', [req.params.id]);
+        res.json({ message: 'Conversation deleted'})
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to delete conversation.' });
+    }
+});
+
+app.post('/api/chat', authenticateToken, async (req, res) => {
+    const { model_name, message_content, web_search_enabled, memory_enabled, system_instruction } = req.body;
+    let conversation_id = req.body.conversation_id;
+
+    if (!model_name || !message_content) {
+        return res.status(400).json({ error: 'model_name and message_content are required.' });
+    }
+
+    if (req.user.role !== 'admin' && req.user.allowed_models) {
+        const allowed = req.user.allowed_models.split(',').map(m => m.trim().toLowerCase());
+        if (!allowed.includes(model_name.trim().toLowerCase())) {
+            return res.status(403).json({ error: `You do not have permission to use model: ${model_name}` });
+        }
+    }
+
+    if (req.user.role !== 'admin' && req.user.rate_limits_per_model) {
+        try {
+            const modelLimits = JSON.parse(req.user.rate_limits_per_model);
+            const matchedKey = Object.keys(modelLimits).find(k => k.toLowerCase() === model_name.toLowerCase());
+            if (matchedKey) {
+                const limits = modelLimits[matchedKey];
+                
+                if (limits.messages !== undefined && limits.messages !== null) {
+                    const countRow = await dbGet(`
+                        SELECT COUNT(*) as count 
+                        FROM messages m 
+                        JOIN conversations c ON m.conversation_id = c.id 
+                        WHERE c.user_id = ? AND LOWER(c.model_name) = LOWER(?) AND m.role = 'user' AND m.created_at >= datetime('now', '-1 day')
+                    `, [req.user.id, model_name]);
+                    if (countRow && countRow.count >= limits.messages) {
+                        return res.status(429).json({ error: `Message limit exceeded for model ${model_name} (${limits.messages} messages per day).` });
+                    }
+                }
+
+                if (limits.tokens !== undefined && limits.tokens !== null) {
+                    const tokensRow = await dbGet(`
+                        SELECT SUM(tokens) as total_tokens 
+                        FROM messages m 
+                        JOIN conversations c ON m.conversation_id = c.id 
+                        WHERE c.user_id = ? AND LOWER(c.model_name) = LOWER(?) AND m.created_at >= datetime('now', '-1 day')
+                    `, [req.user.id, model_name]);
+                    const currentUsed = (tokensRow && tokensRow.total_tokens) || 0;
+                    if (currentUsed >= limits.tokens) {
+                        return res.status(429).json({ error: `Token limit exceeded for model ${model_name} (${limits.tokens} tokens per day).` });
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('Error parsing rate_limits_per_model JSON:', e);
+        }
+    }
+
+    if (req.user.role !== 'admin' && req.user.rate_limit_messages !== null && req.user.rate_limit_messages !== undefined) {
+        try {
+            const countRow = await dbGet(`
+                SELECT COUNT(*) as count 
+                FROM messages m 
+                JOIN conversations c ON m.conversation_id = c.id 
+                WHERE c.user_id = ? AND m.role = 'user' AND m.created_at >= datetime('now', '-1 day')
+            `, [req.user.id]);
+            if (countRow && countRow.count >= req.user.rate_limit_messages) {
+                return res.status(429).json({ error: `Daily AI message limit exceeded (${req.user.rate_limit_messages} messages per day).` });
+            }
+        } catch (err) {
+            console.error('Rate limiting message check failed:', err);
+        }
+    }
+
+    if (req.user.role !== 'admin' && req.user.rate_limit_tokens !== null && req.user.rate_limit_tokens !== undefined) {
+        try {
+            const tokensRow = await dbGet(`
+                SELECT SUM(tokens) as total_tokens 
+                FROM messages m 
+                JOIN conversations c ON m.conversation_id = c.id 
+                WHERE c.user_id = ? AND m.created_at >= datetime('now', '-1 day')
+            `, [req.user.id]);
+            const currentUsed = (tokensRow && tokensRow.total_tokens) || 0;
+            if (currentUsed >= req.user.rate_limit_tokens) {
+                return res.status(429).json({ error: `Daily AI token limit exceeded (${req.user.rate_limit_tokens} tokens per day).` });
+            }
+        } catch (err) {
+            console.error('Rate limiting tokens check failed:', err);
+        }
+    }
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+    try {
+        if (!conversation_id) {
+            const title = message_content.substring(0, 30) + (message_content.length > 30 ? '...' : '');
+            const result = await dbRun(
+                'INSERT INTO conversations (user_id, title, model_name) VALUES (?, ?, ?)',
+                [req.user.id, title, model_name]
+            );
+            conversation_id = result.lastID;
+            res.write(`data: ${JSON.stringify({ conversation_id })}\n\n`);
+        }
+
+        const userTokens = Math.ceil(message_content.length / 4);
+        await dbRun(
+            'INSERT INTO messages (conversation_id, role, content, tokens) VALUES (?, ?, ?, ?)',
+            [conversation_id, 'user', message_content, userTokens]
+        );
+
+        const historyRows = await dbAll(
+            'SELECT role, content FROM messages WHERE conversation_id = ? ORDER BY id DESC LIMIT 20',
+            [conversation_id]
+        );
+        historyRows.reverse();
+
+        const memoryContext = memory_enabled !== false ? await retrieveMemories(req.user.id) : '';
+
+        let searchContext = '';
+        if (web_search_enabled) {
+            res.write(`data: ${JSON.stringify({ search_status: 'searching' })}\n\n`);
+            const searchResults = await performWebSearch(message_content);
+            if (searchResults.length > 0) {
+                searchContext = searchResults.map(r => `Title: ${r.title}\nLink: ${r.link}\nSnippet: ${r.snippet}`).join('\n\n');
+                res.write(`data: ${JSON.stringify({ search_status: 'found', results: searchResults })}\n\n`);
+            } else {
+                res.write(`data: ${JSON.stringify({ search_status: 'no_results' })}\n\n`);
+            }
+        }
+
+        const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+        const cleanIp = clientIp.split(',')[0].trim();
+        const ipLocation = await getIpLocation(cleanIp);
+
+        const messagesPayload = [];
+
+        let basePrompt = system_instruction || `You are Samaipata, a highly helpful AI assistant. Your underlying AI model is "${model_name}" (if asked what model you are, you must state that you are "${model_name}"). Respond in detail. You have access to user profile details, memory, and web search contexts.
+IMPORTANT: Do NOT plainly output or announce your metadata, model details, or user profile facts (such as the user's name, email, IP location, or memory facts) unless it is directly necessary or asked by the user. Do not state them plainly at the start of your response. Always refer to yourself as Samaipata when your name is needed.`;
+
+        let systemPrompt = `${basePrompt}
+
+[CURRENT USER PROFILE]
+- Name/Username: ${req.user.username}
+- Email: ${req.user.email}
+- IP Address: ${ipLocation.ip}
+- Approximate Location: ${ipLocation.city}, ${ipLocation.region}, ${ipLocation.country}`;
+
+        if (memoryContext) {
+            systemPrompt += `\n\n[USER FACTS IN MEMORY] (Details extracted from past conversations with this user. Use these details to customize your answers if helpful):\n${memoryContext}`;
+        }
+        if (searchContext) {
+            systemPrompt += `\n\n[WEB SEARCH RESULTS] (Analyze these facts to answer accurately. Always cite relevant facts. Current Date: ${new Date().toISOString().split('T')[0]}):\n${searchContext}`;
+        }
+
+        messagesPayload.push({ role: 'system', content: systemPrompt });
+
+        historyRows.forEach(row => {
+            messagesPayload.push({ role: row.role, content: row.content });
+        });
+
+        const isGemini = model_name.toLowerCase().startsWith('gemini-');
+        const geminiApiKey = req.body.gemini_api_key;
+
+        if (isGemini && geminiApiKey) {
+            const geminiContents = [];
+            
+            historyRows.forEach(row => {
+                const role = row.role === 'assistant' ? 'model' : 'user';
+                geminiContents.push({
+                    role: role,
+                    parts: [{ text: row.content }]
+                });
+            });
+
+            const startTime = Date.now();
+            const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model_name}:streamGenerateContent?key=${geminiApiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: geminiContents,
+                    systemInstruction: {
+                        parts: [{ text: systemPrompt }]
+                    }
+                })
+            });
+
+            if (!geminiRes.ok) {
+                const errText = await geminiRes.text();
+                res.write(`data: ${JSON.stringify({ error: `Error de API Gemini: ${errText}` })}\n\n`);
+                return res.end();
+            }
+
+            const reader = geminiRes.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let fullAiResponse = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                
+                const lines = buffer.split('\n');
+                buffer = lines.pop();
+
+                for (const line of lines) {
+                    if (line.trim()) {
+                        let cleanLine = line.trim();
+                        if (cleanLine.startsWith(',')) cleanLine = cleanLine.substring(1).trim();
+                        if (cleanLine.startsWith('[')) cleanLine = cleanLine.substring(1).trim();
+                        if (cleanLine.endsWith(']')) cleanLine = cleanLine.substring(0, cleanLine.length - 1).trim();
+
+                        try {
+                            const parsed = JSON.parse(cleanLine);
+                            if (parsed.candidates && parsed.candidates[0].content && parsed.candidates[0].content.parts[0].text) {
+                                const text = parsed.candidates[0].content.parts[0].text;
+                                fullAiResponse += text;
+                                res.write(`data: ${JSON.stringify({ content: text })}\n\n`);
+                            }
+                        } catch (e) {
+                        }
+                    }
+                }
+            }
+
+            const durationMs = Date.now() - startTime;
+            const assistantTokens = Math.ceil(fullAiResponse.length / 4);
+            await dbRun(
+                'INSERT INTO messages (conversation_id, role, content, tokens) VALUES (?, ?, ?, ?)',
+                [conversation_id, 'assistant', fullAiResponse, assistantTokens]
+            );
+
+            res.write(`data: ${JSON.stringify({ done: true, duration_ms: durationMs })}\n\n`);
+            res.end();
+            
+            extractAndStoreMemory(req.user.id, message_content, fullAiResponse, model_name);
+            return;
+        }
+
+        const isHackClub = model_name.includes('/') || req.body.is_hackclub || req.body.isHackClub;
+        let hackclubApiKey = req.body.hackclub_api_key || HACKCLUB_API_KEY;
+
+        if (isHackClub) {
+            if (!hackclubApiKey && req.user && req.user.id) {
+                try {
+                    const userRow = await dbGet('SELECT hackclub_api_key FROM users WHERE id = ?', [req.user.id]);
+                    if (userRow && userRow.hackclub_api_key) hackclubApiKey = userRow.hackclub_api_key;
+                } catch (e) {}
+            }
+
+            if (!hackclubApiKey) {
+                res.write(`data: ${JSON.stringify({ error: 'Falta la API Key de Hack Club. Por favor configúrala en Configuración.' })}\n\n`);
+                return res.end();
+            }
+
+            const startTime = Date.now();
+            const hackClubRes = await fetch('https://ai.hackclub.com/proxy/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${hackclubApiKey}`
+                },
+                body: JSON.stringify({
+                    model: model_name,
+                    messages: messagesPayload.map(m => ({
+                        role: m.role === 'system' ? 'system' : (m.role === 'assistant' ? 'assistant' : 'user'),
+                        content: m.content
+                    })),
+                    stream: true
+                })
+            });
+
+            if (!hackClubRes.ok) {
+                const errText = await hackClubRes.text();
+                let cleanError = `Error de API (${hackClubRes.status})`;
+                try {
+                    const parsedErr = JSON.parse(errText);
+                    if (parsedErr.error && parsedErr.error.metadata && parsedErr.error.metadata.raw) {
+                        try {
+                            const rawErr = JSON.parse(parsedErr.error.metadata.raw);
+                            if (rawErr.error && rawErr.error.message) {
+                                cleanError = rawErr.error.message;
+                            }
+                        } catch (e) {}
+                    }
+                    if (cleanError === `Error de API (${hackClubRes.status})` && parsedErr.error && parsedErr.error.message) {
+                        cleanError = parsedErr.error.message;
+                    }
+                } catch (e) {
+                    cleanError = errText || cleanError;
+                }
+                res.write(`data: ${JSON.stringify({ error: cleanError })}\n\n`);
+                return res.end();
+            }
+
+            const reader = hackClubRes.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let fullAiResponse = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop();
+
+                for (const line of lines) {
+                    const cleanLine = line.trim();
+                    if (!cleanLine) continue;
+                    if (cleanLine.startsWith('data: ')) {
+                        const rawData = cleanLine.substring(6).trim();
+                        if (rawData === '[DONE]') continue;
+                        try {
+                            const parsed = JSON.parse(rawData);
+                            if (parsed.choices && parsed.choices[0]) {
+                                const delta = parsed.choices[0].delta || {};
+                                const text = delta.content || delta.text || (parsed.choices[0].message && parsed.choices[0].message.content) || '';
+                                if (text) {
+                                    fullAiResponse += text;
+                                    res.write(`data: ${JSON.stringify({ message: text, content: text })}\n\n`);
+                                }
+                            }
+                        } catch (e) {
+                        }
+                    }
+                }
+            }
+
+            const durationMs = Date.now() - startTime;
+            const assistantTokens = Math.ceil(fullAiResponse.length / 4);
+            await dbRun(
+                'INSERT INTO messages (conversation_id, role, content, tokens) VALUES (?, ?, ?, ?)',
+                [conversation_id, 'assistant', fullAiResponse, assistantTokens]
+            );
+
+            res.write(`data: ${JSON.stringify({ done: true, duration_ms: durationMs })}\n\n`);
+            res.end();
+
+            extractAndStoreMemory(req.user.id, message_content, fullAiResponse, model_name);
+            return;
+        }
+
+        const startTime = Date.now();
+        const ollamaRes = await fetch(`${OLLAMA}/api/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: model_name,
+                messages: messagesPayload,
+                stream: true
+            })
+        });
+
+        if (!ollamaRes.ok) {
+            const errText = await ollamaRes.text();
+            res.write(`data: ${JSON.stringify({ error: errText })}\n\n`);
+            return res.end();
+        }
+
+        const reader = ollamaRes.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let fullAiResponse = '';
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop();
+
+            for (const line of lines) {
+                if (line.trim()) {
+                    try {
+                        const parsed = JSON.parse(line);
+                        if (parsed.message && parsed.message.content) {
+                            fullAiResponse += parsed.message.content;
+                            res.write(`data: ${JSON.stringify({ content: parsed.message.content })}\n\n`);
+                        }
+                    } catch (e) {
+                    }
+                }
+            }
+        }
+
+        const durationMs = Date.now() - startTime;
+
+        const assistantTokens = Math.ceil(fullAiResponse.length / 4);
+        await dbRun(
+            'INSERT INTO messages (conversation_id, role, content, tokens) VALUES (?, ?, ?, ?)',
+            [conversation_id, 'assistant', fullAiResponse, assistantTokens]
+        );
+
+        res.write(`data: ${JSON.stringify({ done: true, duration_ms: durationMs })}\n\n`);
+        res.end();
+
+        extractAndStoreMemory(req.user.id, message_content, fullAiResponse, model_name);
+
+    } catch (err) {
+        console.error('Chat routing error:', err);
+        res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
+        res.end();
+    }
+});
+
+app.get('api/memories', authenticateToken, async (req, res) => {
+    try {
+        const memories = await dbAll('SELECT fact, created_at FROM memories WHERE user_id = ? ORDER BY created_at DESC', [req.user.id]);
+        res.json(memories);
+    } catch (err) {
+        console.error('[memories] Failed to retrieve memories:', err);
+        res.status(500).json({ error: 'Failed to retrieve memories.' });
+    }
+});
+
+
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 if (require.main === module) {
     app.listen(PORT, '0.0.0.0', () => {
-        console.log(`Samaipata server is running on http://localhost:${PORT}`);
+        console.log(`[Stardance] https://stardance.hackclub.com/projects/38064`);
+        console.log(`[Samaipata] http://localhost:${PORT}`);
+        console.log(`[Samaipata Network] http://0.0.0.0:${PORT}`);
     });
 }
 

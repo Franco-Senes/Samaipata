@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Samaipata</title>
+  <link rel="icon" type="image/svg+xml" href="Icon.ico" />
+  <link rel="alternate icon" href="Icon.ico" />
+
+  <!-- Immediate Theme Initializer -->
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('samaipata_theme');
+        if (saved === 'light') {
+          document.documentElement.classList.remove('dark');
+        } else {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Libre Baskerville & DM Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="css/index.css" />
+  <link rel="stylesheet" href="css/marketplace.css" />
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"DM Sans"', 'sans-serif'],
+            serif: ['"Libre Baskerville"', 'Georgia', 'serif'],
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-[#181818] text-[#ECECEC] min-h-screen flex overflow-hidden selection:bg-zinc-700 selection:text-white font-sans antialiased">
+
+  <!-- ===============================
+       1. UNIFIED ANIMATED SIDEBAR
+       =============================== -->
+  <aside id="app-sidebar" class="sidebar-container sidebar-expanded shrink-0 bg-[#141414] border-r border-[#262626] h-screen relative overflow-hidden z-30 select-none">
+    
+    <!-- A. Collapsed Strip Layer (w-14) -->
+    <div id="sidebar-strip-layer" class="sidebar-strip-layer absolute inset-0 py-4 flex flex-col justify-between items-center z-10">
+      <div class="flex flex-col items-center gap-4">
+        <div class="w-8 h-8 rounded-xl bg-[#212121] border border-[#2E2E2E] flex items-center justify-center text-zinc-200 shadow-sm" title="Samaipata">
+          <i class="fa-solid fa-archway text-xs"></i>
+        </div>
+
+        <button id="btn-expand-sidebar" class="w-8 h-8 rounded-xl flex items-center justify-center text-zinc-300 hover:text-white hover:bg-[#222222] transition-colors" title="Expandir barra lateral">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <path d="M9 4v16"></path>
+          </svg>
+        </button>
+
+        <div class="flex flex-col gap-2 pt-2">
+          <a href="index.html" class="p-2 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-[#222222] transition-colors" title="Nuevo Chat">
+            <i data-lucide="square-pen" class="w-4 h-4"></i>
+          </a>
+          <a href="marketplace.html" class="p-2 rounded-xl bg-[#2A2A2A] text-zinc-100 font-medium transition-colors" title="Marketplace / Plugins">
+            <i data-lucide="layout-grid" class="w-4 h-4"></i>
+          </a>
+        </div>
+      </div>
+
+      <div class="flex flex-col items-center gap-3">
+        <button id="btn-theme-toggle-strip" class="p-2 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-[#222222] transition-colors" title="Cambiar tema">
+          <i data-lucide="sun-moon" class="w-4 h-4"></i>
+        </button>
+        <div id="sidebar-user-avatar-strip" class="w-7 h-7 rounded-full bg-zinc-800 border border-zinc-700 text-[11px] font-medium text-zinc-200 flex items-center justify-center">
+          FS
+        </div>
+      </div>
+    </div>
+
+    <!-- B. Expanded Full Panel Layer (w-64) -->
+    <div id="sidebar-panel-layer" class="sidebar-panel-layer absolute inset-0 p-3.5 flex flex-col justify-between z-20">
+      <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <div class="flex items-center justify-between px-2 py-1 mb-3 shrink-0">
+          <div class="flex items-center gap-2.5">
+            <i class="fa-solid fa-archway text-base text-zinc-100"></i>
+            <span class="font-serif text-lg font-bold tracking-tight text-zinc-100">samaipata</span>
+          </div>
+          <button id="btn-collapse-sidebar" class="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-[#222222] transition-colors" title="Contraer">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <path d="M9 4v16"></path>
+            </svg>
+          </button>
+        </div>
+
+        <nav class="space-y-0.5 shrink-0 mb-4 text-xs font-normal">
+          <a href="index.html" class="w-full text-left px-2.5 py-1.5 rounded-xl text-zinc-400 hover:bg-[#222222] hover:text-zinc-100 flex items-center gap-2.5 transition-colors">
+            <i data-lucide="square-pen" class="w-4 h-4 text-zinc-400"></i>
+            <span>New Chat</span>
+          </a>
+          <a href="marketplace.html" class="w-full text-left px-2.5 py-1.5 rounded-xl bg-[#2A2A2A] text-zinc-100 font-medium flex items-center gap-2.5 transition-colors">
+            <i data-lucide="layout-grid" class="w-4 h-4 text-zinc-400"></i>
+            <span>Marketplace & Models</span>
+          </a>
+        </nav>
+
+        <div class="px-2.5 pt-2 border-t border-[#262626] flex-1 overflow-y-auto space-y-3 text-xs text-zinc-400">
+          <p class="text-[11px] text-zinc-500 uppercase tracking-wider font-medium">Catalogue</p>
+          <p class="text-[11px] leading-relaxed text-zinc-400">
+            Download and manage local models from the marketplace.
+          </p>
+        </div>
+      </div>
+
+      <!-- Bottom User Strip with Popup Menu -->
+      <div class="pt-3 border-t border-[#262626] relative shrink-0">
+        <!-- User Popup Dropdown -->
+        <div id="user-popup-menu-marketplace" class="hidden absolute bottom-full left-0 mb-2 w-60 bg-[#212121] border border-[#2E2E2E] rounded-2xl shadow-2xl p-1.5 z-50">
+          <div class="p-2 border-b border-[#2C2C2C] flex items-center gap-2.5">
+            <div id="dropdown-user-avatar" class="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-200 flex items-center justify-center">
+              FS
+            </div>
+            <div class="truncate">
+              <p id="dropdown-user-name" class="text-xs font-semibold text-zinc-200 truncate">Franco</p>
+              <span class="text-[10px] text-zinc-400">100% Open & Local</span>
+            </div>
+          </div>
+
+          <div class="py-1 space-y-0.5 text-xs">
+            <a href="index.html" class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-[#2A2A2A] text-zinc-300 hover:text-zinc-100 flex items-center gap-2.5 transition-colors">
+              <i data-lucide="square-pen" class="w-3.5 h-3.5 text-zinc-400"></i>
+              <span>Go to Chat</span>
+            </a>
+          </div>
+
+          <div class="pt-1 border-t border-[#2C2C2C]">
+            <button id="btn-marketplace-logout" class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-red-500/10 text-red-400 hover:text-red-300 flex items-center gap-2.5 transition-colors text-xs">
+              <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+              <span class="font-medium">Sign Out</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between px-1.5">
+          <div id="btn-open-user-menu" class="flex items-center gap-2.5 cursor-pointer group flex-1 truncate py-1">
+            <div id="sidebar-user-avatar" class="w-7 h-7 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-200 flex items-center justify-center text-xs font-semibold">
+              FS
+            </div>
+            <p id="sidebar-user-name" class="text-xs text-zinc-300 group-hover:text-white font-medium truncate">Franco</p>
+          </div>
+
+          <button id="btn-theme-toggle" class="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-[#222222]" title="Cambiar tema">
+            <i data-lucide="sun-moon" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===============================
+       2. MAIN MARKETPLACE CONTENT
+       =============================== -->
+  <main class="flex-1 flex flex-col h-screen overflow-hidden bg-[#181818]">
+    <!-- Top Bar -->
+    <header class="h-14 px-6 border-b border-[#262626] flex items-center justify-between gap-4 bg-[#181818] shrink-0 z-10">
+      <div class="flex items-center gap-3">
+        <div class="w-7 h-7 rounded-xl bg-[#242424] border border-[#2E2E2E] flex items-center justify-center text-zinc-300 shadow-sm">
+          <i class="fa-solid fa-archway text-xs"></i>
+        </div>
+        <h1 class="font-serif text-xl font-normal text-[#ECECEC]">Model Marketplace</h1>
+        <span id="models-count-badge" class="px-2.5 py-0.5 rounded-full text-[11px] bg-[#242424] border border-[#2E2E2E] text-zinc-400">0 models</span>
+      </div>
+
+      <!-- Search Input -->
+      <div class="relative max-w-xs w-full">
+        <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"></i>
+        <input
+          id="search-input"
+          type="text"
+          placeholder="Search models or tags..."
+          class="w-full pl-8 pr-3.5 py-1.5 rounded-xl bg-[#212121] border border-[#2E2E2E] text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-zinc-400 transition-colors font-sans"
+        />
+      </div>
+    </header>
+
+    <!-- Scrollable Body -->
+    <div class="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
+      <!-- Filter bar & Actions -->
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-2">
+          <button class="filter-btn active px-3.5 py-1.5 rounded-xl text-xs font-medium border border-[#2E2E2E] bg-[#2A2A2A] text-zinc-100 transition-colors" data-filter="all">
+            All Models
+          </button>
+          <button class="filter-btn px-3.5 py-1.5 rounded-xl text-xs font-medium border border-[#2E2E2E] bg-[#1C1C1C] text-zinc-400 hover:text-zinc-200 transition-colors" data-filter="local">
+            Instaled
+          </button>
+          <button class="filter-btn px-3.5 py-1.5 rounded-xl text-xs font-medium border border-[#2E2E2E] bg-[#1C1C1C] text-zinc-400 hover:text-zinc-200 transition-colors" data-filter="cloud">
+            Cloud / Hack Club
+          </button>
+          <button class="filter-btn px-3.5 py-1.5 rounded-xl text-xs font-medium border border-[#2E2E2E] bg-[#1C1C1C] text-zinc-400 hover:text-zinc-200 transition-colors" data-filter="prompts">
+            System Prompts
+          </button>
+        </div>
+
+        <div id="action-buttons-container">
+          <button id="btn-new-prompt" class="hidden px-3.5 py-1.5 rounded-xl bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-sm">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            <span>New Prompt</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Models Grid -->
+      <div id="models-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Dynamic Model Cards -->
+      </div>
+
+      <!-- System Prompts Section -->
+      <div id="prompts-section" class="hidden space-y-4">
+        <div id="prompts-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Dynamic Prompts Cards -->
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/marketplace.js"></script>
+</body>
+</html>

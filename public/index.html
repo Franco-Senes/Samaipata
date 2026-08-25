@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Samaipata</title>
+  <link rel="icon" type="image/svg+xml" href="Icon.ico" />
+  <link rel="alternate icon" href="Icon.ico" />
+
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('samaipata_theme');
+        if (saved === 'light') {
+          document.documentElement.classList.remove('dark');
+        } else {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
+
+  <!-- Libaries -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <link rel="stylesheet" href="css/index.css" />
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"DM Sans"', 'sans-serif'],
+            serif: ['"Libre Baskerville"', 'Georgia', 'serif'],
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="bg-[#181818] text-[#ECECEC] min-h-screen flex overflow-hidden selection:bg-zinc-700 selection:text-white font-sans antialiased">
+
+
+
+  <!-- ===============================
+       1. UNIFIED ANIMATED SIDEBAR
+       =============================== -->
+  <aside id="app-sidebar" class="sidebar-container sidebar-expanded shrink-0 bg-[#141414] border-r border-[#262626] h-screen relative overflow-hidden z-30 select-none">
+    
+    <!-- A. Collapsed Strip Layer (w-14) -->
+    <div id="sidebar-strip-layer" class="sidebar-strip-layer absolute inset-0 py-4 flex flex-col justify-between items-center z-10">
+      <div class="flex flex-col items-center gap-4">
+        <div class="w-8 h-8 rounded-xl bg-[#212121] border border-[#2E2E2E] flex items-center justify-center text-zinc-200 shadow-sm" title="Samaipata">
+          <i class="fa-solid fa-archway text-xs"></i>
+        </div>
+
+        <button id="btn-expand-sidebar" class="w-8 h-8 rounded-xl flex items-center justify-center text-zinc-300 hover:text-white hover:bg-[#222222] transition-colors" title="Expandir barra lateral">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <path d="M9 4v16"></path>
+          </svg>
+        </button>
+
+        <div class="flex flex-col gap-2 pt-2">
+          <button id="btn-strip-new-task" class="p-2 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-[#222222] transition-colors" title="Nuevo Chat">
+            <i data-lucide="square-pen" class="w-4 h-4"></i>
+          </button>
+          <a href="marketplace.html" class="p-2 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-[#222222] transition-colors" title="Marketplace / Plugins">
+            <i data-lucide="layout-grid" class="w-4 h-4"></i>
+          </a>
+        </div>
+      </div>
+
+      <div class="flex flex-col items-center gap-3 relative">
+        <button id="btn-strip-theme" class="p-2 rounded-xl text-zinc-400 hover:text-zinc-100 hover:bg-[#222222] transition-colors" title="Cambiar tema">
+          <i data-lucide="sun-moon" class="w-4 h-4"></i>
+        </button>
+        <button id="btn-strip-profile" class="w-7 h-7 rounded-full bg-zinc-800 border border-zinc-700 text-[11px] font-medium text-zinc-200 flex items-center justify-center hover:ring-2 hover:ring-white transition-all" title="Usuario">
+          FS
+        </button>
+      </div>
+    </div>
+
+    <!-- B. Expanded Full Panel Layer (w-64) -->
+    <div id="sidebar-panel-layer" class="sidebar-panel-layer absolute inset-0 p-3.5 flex flex-col justify-between z-20">
+      <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <!-- Top Brand & Header -->
+        <div class="flex items-center justify-between px-2 py-1 mb-3 shrink-0">
+          <div class="flex items-center gap-2.5">
+            <i class="fa-solid fa-archway text-base text-zinc-100"></i>
+            <span class="font-serif text-lg font-bold tracking-tight text-zinc-100">samaipata</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <button id="btn-sidebar-search-trigger" class="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-[#222222] transition-colors" title="Buscar">
+              <i data-lucide="search" class="w-4 h-4"></i>
+            </button>
+            <button id="btn-collapse-sidebar" class="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-[#222222] transition-colors" title="Contraer barra lateral">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <path d="M9 4v16"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Navigation List -->
+        <nav class="space-y-0.5 shrink-0 mb-4 text-xs font-normal">
+          <button id="btn-sidebar-new-chat" class="w-full text-left px-2.5 py-1.5 rounded-xl text-zinc-300 hover:bg-[#222222] hover:text-zinc-100 flex items-center gap-2.5 transition-colors">
+            <i data-lucide="square-pen" class="w-4 h-4 text-zinc-400"></i>
+            <span>New Chat</span>
+          </button>
+          <a href="marketplace.html" class="w-full text-left px-2.5 py-1.5 rounded-xl text-zinc-400 hover:bg-[#222222] hover:text-zinc-200 flex items-center gap-2.5 transition-colors">
+            <i data-lucide="layout-grid" class="w-4 h-4 text-zinc-400"></i>
+            <span>Marketplace & Models</span>
+          </a>
+        </nav>
+
+        <!-- Chats Section (Expands to fill height) -->
+        <div class="flex-1 flex flex-col min-h-0 px-2.5 pt-2 border-t border-[#262626]">
+          <div class="flex items-center justify-between text-[11px] text-zinc-500 uppercase tracking-wider mb-2 font-medium">
+            <span>Chats</span>
+            <button class="hover:text-zinc-300" title="Filtrar"><i data-lucide="list-filter" class="w-3.5 h-3.5"></i></button>
+          </div>
+
+          <!-- History List -->
+          <div class="flex-1 overflow-y-auto pr-1">
+            <ul id="history-list" class="space-y-1">
+              <!-- Dynamic items -->
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom User Strip with Dropdown Menu -->
+      <div class="pt-3 border-t border-[#262626] relative shrink-0">
+        <!-- User Popup Dropdown -->
+        <div id="user-popup-menu" class="hidden absolute bottom-full left-0 mb-2 w-60 bg-[#212121] border border-[#2E2E2E] rounded-2xl shadow-2xl p-1.5 z-50">
+          <div class="p-2 border-b border-[#2C2C2C] flex items-center gap-2.5">
+            <div id="dropdown-user-avatar" class="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-200 flex items-center justify-center">
+              FS
+            </div>
+            <div class="truncate">
+              <p id="dropdown-user-name" class="text-xs font-semibold text-zinc-200 truncate">Franco</p>
+              <span class="text-[10px] text-zinc-400">100% Free & Local</span>
+            </div>
+          </div>
+
+          <div class="py-1 space-y-0.5 text-xs">
+            <!-- Admin Panel Button (Visible for Admins) -->
+            <button id="btn-dropdown-admin" class="admin-only-btn hidden w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-[#2A2A2A] text-zinc-200 hover:text-white flex items-center gap-2.5 transition-colors font-medium">
+              <i class="fa-solid fa-archway text-xs text-zinc-300 mr-0.5"></i>
+              <span>Admin Panel</span>
+            </button>
+
+            <button id="btn-dropdown-settings" class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-[#2A2A2A] text-zinc-300 hover:text-zinc-100 flex items-center gap-2.5 transition-colors">
+              <i data-lucide="settings" class="w-3.5 h-3.5 text-zinc-400"></i>
+              <span>Settings</span>
+            </button>
+            <a href="marketplace.html" class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-[#2A2A2A] text-zinc-300 hover:text-zinc-100 flex items-center gap-2.5 transition-colors">
+              <i data-lucide="layout-grid" class="w-3.5 h-3.5 text-zinc-400"></i>
+              <span>Model Marketplace</span>
+            </a>
+          </div>
+
+          <div class="pt-1 border-t border-[#2C2C2C]">
+            <button id="btn-dropdown-logout" class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-red-500/10 text-red-400 hover:text-red-300 flex items-center gap-2.5 transition-colors text-xs">
+              <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+              <span class="font-medium">Sign Out</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between px-1.5">
+          <div id="btn-open-settings-profile" class="flex items-center gap-2.5 cursor-pointer group flex-1 truncate py-1">
+            <div id="sidebar-user-avatar" class="w-7 h-7 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-200 flex items-center justify-center text-xs font-semibold shrink-0">
+              FS
+            </div>
+            <div class="truncate text-left">
+              <p id="sidebar-user-name" class="text-xs text-zinc-300 group-hover:text-white truncate font-medium">Franco</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-1 text-zinc-400">
+            <button id="btn-theme-toggle-main" class="p-1.5 rounded-lg hover:text-zinc-200 hover:bg-[#222222]" title="Cambiar tema">
+              <i data-lucide="sun-moon" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===============================
+       2. MAIN WORKSPACE & TOP BAR
+       =============================== -->
+  <main class="flex-1 flex flex-col h-screen overflow-hidden relative bg-[#181818]">
+
+    <!-- Top Bar Navigation -->
+    <header class="h-14 px-6 flex items-center justify-between shrink-0 z-20">
+      <div class="flex items-center gap-3">
+        <!-- Model Selector Pill -->
+        <div class="relative">
+          <button id="btn-model-picker" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#222222] border border-[#2E2E2E] hover:border-zinc-500 text-xs font-medium text-zinc-200 transition-colors">
+            <span id="selected-model-badge">Loading...</span>
+            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-zinc-400"></i>
+          </button>
+
+          <!-- Model Picker Dropdown -->
+          <div id="model-picker-dropdown" class="hidden absolute top-full left-0 mt-2 w-60 bg-[#212121] border border-[#2E2E2E] rounded-2xl shadow-2xl p-1.5 z-50 max-h-64 overflow-y-auto">
+            <!-- Dynamically populated options -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Top area -->
+      <div></div>
+    </header>
+
+    <!-- Chat Scroll Container (Active conversation view) -->
+    <div id="chat-scroll-view" class="flex-1 overflow-y-auto px-4 sm:px-8 py-6 hidden max-w-4xl w-full mx-auto space-y-4">
+      <div id="messages-container" class="space-y-4 w-full">
+        <!-- Dynamic chat bubbles -->
+      </div>
+    </div>
+
+    <!-- Hero Empty State View (Centered Manus Experience) -->
+    <div id="hero-welcome" class="flex-1 overflow-y-auto flex flex-col items-center justify-center p-6 text-center max-w-3xl mx-auto w-full">
+      
+      <!-- Samaipata Archway Brand Logo Icon -->
+      <div class="w-12 h-12 rounded-2xl bg-[#212121] border border-[#2E2E2E] flex items-center justify-center mb-5 shadow-xl">
+        <i class="fa-solid fa-archway text-xl text-zinc-200"></i>
+      </div>
+
+      <!-- Top Small Pill: IA Local Autónoma | Configurar -->
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#222222] border border-[#2E2E2E] text-xs text-zinc-400 mb-6">
+        <span>Samaipata</span>
+        <span class="text-zinc-600">|</span>
+        <button id="btn-hero-settings-link" class="text-zinc-200 hover:underline font-medium">Configurar</button>
+      </div>
+
+      <!-- Centered Hero Title (Libre Baskerville Serif) -->
+      <h1 class="font-serif text-4xl sm:text-5xl font-normal text-[#EDEDED] mb-8 tracking-tight">
+        ¿What can i do for you?
+      </h1>
+
+      <!-- Unified Manus Input Card Container -->
+      <div class="w-full bg-[#212121] border border-[#2E2E2E] rounded-3xl p-4 shadow-2xl backdrop-blur-md transition-all duration-200 focus-within:border-zinc-500 mb-5">
+        
+        <!-- Textarea input -->
+        <textarea
+          id="prompt-input"
+          rows="1"
+          placeholder="¿What can i help you with today? Write a question a prompt or a task"
+          class="w-full bg-transparent text-sm text-[#ECECEC] placeholder-zinc-500 focus:outline-none resize-none px-1 py-1 max-h-44 font-sans"
+        ></textarea>
+
+        <!-- Attachment previews -->
+        <div id="attachment-pills-container" class="hidden my-2 flex flex-wrap gap-2"></div>
+
+        <!-- Input Card Bottom Toolbar -->
+        <div class="flex items-center justify-between pt-3 mt-1 border-t border-[#2A2A2A]">
+          <!-- Left Tools -->
+          <div class="flex items-center gap-2">
+            <span class="text-[11px] text-zinc-500">Local Inference</span>
+          </div>
+
+          <!-- Right Tools: Send Button with High Contrast Arrow Icon -->
+          <div class="flex items-center gap-2">
+            <button class="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-300" title="Opciones">
+              <i data-lucide="message-square-text" class="w-4 h-4"></i>
+            </button>
+
+            <!-- Send Button with Explicit Inline SVG Arrow -->
+            <button id="btn-send-message" type="button" class="w-8 h-8 rounded-full bg-white hover:bg-zinc-200 text-zinc-950 flex items-center justify-center transition-all active:scale-95 shadow-md shrink-0 cursor-pointer" title="Enviar mensaje">
+              <svg class="w-4 h-4 text-zinc-950 fill-none stroke-current" style="stroke-width: 2.5px;" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="19" x2="12" y2="5"></line>
+                <polyline points="5 12 12 5 19 12"></polyline>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Attached "Sugerido para ti" Section -->
+        <div id="suggested-section" class="mt-4 pt-3 border-t border-[#2A2A2A] text-left">
+          <div class="flex items-center justify-between text-xs text-zinc-400 mb-2.5 px-1">
+            <span class="font-medium text-zinc-300">Start with Samaipata</span>
+            <div class="flex items-center gap-2">
+              <button id="btn-refresh-suggestions" class="hover:text-zinc-200 transition-colors" title="Recargar"><i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i></button>
+              <button id="btn-close-suggestions" class="hover:text-zinc-200 transition-colors" title="Cerrar"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+            </div>
+          </div>
+
+          <!-- 3 Horizontal Suggestion Cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div class="suggestion-card bg-[#1A1A1A] border border-[#2C2C2C] rounded-2xl p-3.5 hover:border-zinc-500 hover:bg-[#242424] cursor-pointer transition-all flex flex-col justify-between h-24 group" data-prompt="Hello, Samaipata what are you and what can you do.">
+              <div class="flex items-start justify-between">
+                <i data-lucide="message-square" class="w-3.5 h-3.5 text-zinc-400"></i>
+                <i data-lucide="arrow-up-right" class="w-3.5 h-3.5 text-zinc-500 group-hover:text-zinc-200 transition-colors"></i>
+              </div>
+              <p class="text-xs text-zinc-300 line-clamp-2 leading-relaxed">
+                Meet Samaipata
+              </p>
+            </div>
+
+            <div class="suggestion-card bg-[#1A1A1A] border border-[#2C2C2C] rounded-2xl p-3.5 hover:border-zinc-500 hover:bg-[#242424] cursor-pointer transition-all flex flex-col justify-between h-24 group" data-prompt="What access does samaipata have to my information?">
+              <div class="flex items-start justify-between">
+                <i data-lucide="message-square" class="w-3.5 h-3.5 text-zinc-400"></i>
+                <i data-lucide="arrow-up-right" class="w-3.5 h-3.5 text-zinc-500 group-hover:text-zinc-200 transition-colors"></i>
+              </div>
+              <p class="text-xs text-zinc-300 line-clamp-2 leading-relaxed">
+                What access does samaipata have to your information?
+              </p>
+            </div>
+
+            <div class="suggestion-card bg-[#1A1A1A] border border-[#2C2C2C] rounded-2xl p-3.5 hover:border-zinc-500 hover:bg-[#242424] cursor-pointer transition-all flex flex-col justify-between h-24 group" data-prompt="Test all of the md functions">
+              <div class="flex items-start justify-between">
+                <i data-lucide="message-square" class="w-3.5 h-3.5 text-zinc-400"></i>
+                <i data-lucide="arrow-up-right" class="w-3.5 h-3.5 text-zinc-500 group-hover:text-zinc-200 transition-colors"></i>
+              </div>
+              <p class="text-xs text-zinc-300 line-clamp-2 leading-relaxed">
+                Test all of the md functions
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+<div class="flex flex-wrap items-center justify-center gap-2 mb-8">
+  <!-- Code Review / Refactoring -->
+  <button class="action-pill px-3.5 py-1.5 rounded-full bg-[#212121] border border-[#2E2E2E] hover:border-zinc-500 text-xs text-zinc-300 hover:text-white flex items-center gap-1.5 transition-colors" data-prompt="Analyze this code, detect performance bottlenecks, and generate an optimized, refactored version">
+    <i data-lucide="file-code" class="w-3.5 h-3.5 text-zinc-400"></i>
+    <span>Audit code</span>
+  </button>
+
+  <!-- Business / Market Strategy -->
+  <button class="action-pill px-3.5 py-1.5 rounded-full bg-[#212121] border border-[#2E2E2E] hover:border-zinc-500 text-xs text-zinc-300 hover:text-white flex items-center gap-1.5 transition-colors" data-prompt="Create a comprehensive SWOT analysis and go-to-market plan for launching a B2B SaaS product">
+    <i data-lucide="trending-up" class="w-3.5 h-3.5 text-zinc-400"></i>
+    <span>Market strategy</span>
+  </button>
+
+  <!-- Data Analysis / SQL / Reasoning -->
+  <button class="action-pill px-3.5 py-1.5 rounded-full bg-[#212121] border border-[#2E2E2E] hover:border-zinc-500 text-xs text-zinc-300 hover:text-white flex items-center gap-1.5 transition-colors" data-prompt="Design a relational PostgreSQL schema and key indexed SQL queries for an e-commerce platform">
+    <i data-lucide="database" class="w-3.5 h-3.5 text-zinc-400"></i>
+    <span>Data modeling</span>
+  </button>
+
+  <!-- Technical Writing / Documentation -->
+  <button class="action-pill px-3.5 py-1.5 rounded-full bg-[#212121] border border-[#2E2E2E] hover:border-zinc-500 text-xs text-zinc-300 hover:text-white flex items-center gap-1.5 transition-colors" data-prompt="Draft complete Markdown technical documentation for a RESTful API, including endpoints, payloads, and error codes">
+    <i data-lucide="file-text" class="w-3.5 h-3.5 text-zinc-400"></i>
+    <span>API docs</span>
+  </button>
+
+  <!-- General Intelligence / Reasoning -->
+  <button class="action-pill px-3 py-1.5 rounded-full bg-[#212121] border border-[#2E2E2E] hover:border-zinc-500 text-xs text-zinc-400 hover:text-white transition-colors" data-prompt="Compare microservices architecture vs. modular monoliths with real-world trade-offs">
+    <span>More</span>
+  </button>
+</div>  
+
+      <!-- Bottom Promo Banner -->
+      <div class="w-full max-w-xl bg-[#212121]/90 border border-[#2E2E2E] rounded-2xl p-4 flex items-center justify-between text-left shadow-lg">
+        <div>
+          <h4 class="text-xs font-semibold text-zinc-200 mb-0.5">Customize your ai assistant.</h4>
+          <p class="text-[11px] text-zinc-400">Local and cloud models running locally on your machine.</p>
+        </div>
+        <div class="flex items-center gap-1.5 shrink-0 pl-3">
+          <span class="w-5 h-5 rounded-full bg-zinc-800 text-zinc-300 flex items-center justify-center text-[10px]"><i data-lucide="bot" class="w-3 h-3"></i></span>
+          <span class="w-5 h-5 rounded-full bg-zinc-800 text-zinc-300 flex items-center justify-center text-[10px]"><i data-lucide="sparkles" class="w-3 h-3"></i></span>
+          <span class="w-5 h-5 rounded-full bg-zinc-800 text-zinc-300 flex items-center justify-center text-[10px]"><i data-lucide="hard-drive" class="w-3 h-3"></i></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fixed Chat Input at bottom (only visible when in active chat view) -->
+    <div id="active-chat-input-bar" class="hidden p-4 sm:p-6 w-full max-w-4xl mx-auto shrink-0">
+      <div class="bg-[#212121] border border-[#2E2E2E] rounded-3xl p-3 shadow-xl backdrop-blur-md transition-all focus-within:border-zinc-500">
+        <textarea
+          id="active-prompt-input"
+          rows="1"
+          placeholder="Write a message..."
+          class="w-full bg-transparent text-sm text-[#ECECEC] placeholder-zinc-500 focus:outline-none resize-none px-3 py-1.5 max-h-44 font-sans"
+        ></textarea>
+        <div class="flex items-center justify-between pt-2 border-t border-[#2A2A2A] mt-1">
+          <div class="flex items-center gap-2">
+            <span class="text-[11px] text-zinc-500 pl-2">Local Inference</span>
+          </div>
+          <button id="btn-active-send" type="button" class="w-8 h-8 rounded-full bg-white hover:bg-zinc-200 text-zinc-950 flex items-center justify-center transition-all shadow-md shrink-0 cursor-pointer font-bold">
+            <svg class="w-4 h-4 text-zinc-950 fill-none stroke-current" style="stroke-width: 2.5px;" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="19" x2="12" y2="5"></line>
+              <polyline points="5 12 12 5 19 12"></polyline>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ==============================================
+       3. IN-APP SETTINGS MODAL
+       ============================================== -->
+  <div id="settings-modal-backdrop" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md hidden">
+    <div class="modal-card bg-[#1C1C1C] border border-[#2E2E2E] rounded-3xl max-w-4xl w-full shadow-2xl overflow-hidden flex flex-col md:flex-row h-[560px]">
+
+      <!-- Left Modal Sidebar -->
+      <aside class="w-full md:w-64 bg-[#161616] p-4 border-b md:border-b-0 md:border-r border-[#282828] flex flex-col justify-between shrink-0">
+        <div class="flex flex-col h-full overflow-hidden">
+          <!-- Profile Badge on Top -->
+          <div class="flex items-center justify-between p-2 rounded-xl hover:bg-[#222222] cursor-pointer mb-3">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-200 flex items-center justify-center">
+                FS
+              </div>
+              <div class="text-left">
+                <p id="settings-profile-name" class="text-xs font-semibold text-zinc-200">Franco</p>
+                <span class="text-[10px] text-zinc-500">Local Account</span>
+              </div>
+            </div>
+            <i data-lucide="user-check" class="w-3.5 h-3.5 text-zinc-500"></i>
+          </div>
+
+          <!-- Search Input -->
+          <div class="relative mb-3 px-1">
+            <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500"></i>
+            <input
+              id="settings-search-input"
+              type="text"
+              placeholder="Search"
+              class="w-full pl-8 pr-3 py-1.5 rounded-xl bg-[#212121] border border-[#2E2E2E] text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-zinc-500"
+            />
+          </div>
+
+          <!-- Nav Categorized Groups -->
+          <div class="flex-1 overflow-y-auto space-y-4 pr-1 text-xs">
+            <div>
+              <span class="text-[10px] text-zinc-500 font-medium px-2 uppercase tracking-wider">Settings</span>
+              <div class="space-y-0.5 mt-1">
+                <button class="settings-tab-btn w-full text-left px-2.5 py-1.5 rounded-xl bg-[#2A2A2A] text-zinc-100 font-medium flex items-center gap-2.5 transition-colors" data-tab="general">
+                  <i data-lucide="sliders" class="w-3.5 h-3.5 text-zinc-400"></i>
+                  <span class="tab-label">General</span>
+                </button>
+                <button class="settings-tab-btn w-full text-left px-2.5 py-1.5 rounded-xl text-zinc-400 hover:bg-[#242424] hover:text-zinc-200 flex items-center gap-2.5 transition-colors" data-tab="ollama">
+                  <i data-lucide="hard-drive" class="w-3.5 h-3.5 text-zinc-400"></i>
+                  <span class="tab-label">Local Ollama</span>
+                </button>
+                <button class="settings-tab-btn w-full text-left px-2.5 py-1.5 rounded-xl text-zinc-400 hover:bg-[#242424] hover:text-zinc-200 flex items-center gap-2.5 transition-colors" data-tab="apikeys">
+                  <i data-lucide="key" class="w-3.5 h-3.5 text-zinc-400"></i>
+                  <span class="tab-label">API Keys & Cloud</span>
+                </button>
+                <button class="settings-tab-btn w-full text-left px-2.5 py-1.5 rounded-xl text-zinc-400 hover:bg-[#242424] hover:text-zinc-200 flex items-center gap-2.5 transition-colors" data-tab="prompts">
+                  <i data-lucide="file-text" class="w-3.5 h-3.5 text-zinc-400"></i>
+                  <span class="tab-label">System Prompts</span>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <span class="text-[10px] text-zinc-500 font-medium px-2 uppercase tracking-wider">Capacidades</span>
+              <div class="space-y-0.5 mt-1">
+                <button class="settings-tab-btn w-full text-left px-2.5 py-1.5 rounded-xl text-zinc-400 hover:bg-[#242424] hover:text-zinc-200 flex items-center gap-2.5 transition-colors" data-tab="custom">
+                  <i data-lucide="layout-grid" class="w-3.5 h-3.5 text-zinc-400"></i>
+                  <span class="tab-label">Custom</span>
+                </button>
+                <button class="settings-tab-btn w-full text-left px-2.5 py-1.5 rounded-xl text-zinc-400 hover:bg-[#242424] hover:text-zinc-200 flex items-center gap-2.5 transition-colors" data-tab="computer">
+                  <i data-lucide="monitor" class="w-3.5 h-3.5 text-zinc-400"></i>
+                  <span class="tab-label">My Computer</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-[#262626] px-2 space-y-2">
+          <a href="marketplace.html" class="text-xs text-zinc-400 hover:text-zinc-200 flex items-center justify-between">
+            <span>Marketplace & Models</span>
+            <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
+          </a>
+          <button id="btn-settings-logout" type="button" class="w-full text-left py-1 text-xs text-red-400 hover:text-red-300 flex items-center gap-2 transition-colors">
+            <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+            <span>Sign Out</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- Right Content Panel -->
+      <section class="flex-1 p-6 sm:p-8 overflow-y-auto flex flex-col justify-between bg-[#1C1C1C]">
+        <div>
+          <div class="flex items-center justify-between pb-4 border-b border-[#282828] mb-6">
+            <h2 id="settings-active-title" class="text-xl font-semibold text-[#ECECEC]">General</h2>
+            <button id="btn-close-settings-modal" class="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-[#282828] transition-colors" title="Cerrar">
+              <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+          </div>
+
+          <!-- TAB 1: General -->
+          <div id="settings-tab-general" class="settings-tab-content space-y-6">
+            <div>
+              <h3 class="text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-3">Appereance</h3>
+              
+              <div class="mb-4">
+                <label class="block text-xs text-zinc-400 mb-1.5">Language</label>
+                <select id="settings-lang" class="w-full max-w-xs px-3.5 py-2 rounded-xl bg-[#242424] border border-[#2E2E2E] text-xs text-zinc-200 focus:outline-none focus:border-zinc-500">
+                  <option value="es-latam">Español (Latinoamérica)</option>
+                  <option value="en-us">English (US)</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs text-zinc-400 mb-2">Theme</label>
+                <div class="flex items-center gap-3 max-w-sm">
+                  <button type="button" class="theme-option-btn" data-theme="light">
+                    <i data-lucide="sun" class="w-4 h-4"></i>
+                    <span class="text-xs font-medium">Light</span>
+                  </button>
+                  <button type="button" class="theme-option-btn" data-theme="dark">
+                    <i data-lucide="moon" class="w-4 h-4"></i>
+                    <span class="text-xs font-medium">Dark</span>
+                  </button>
+                  <button type="button" class="theme-option-btn" data-theme="auto">
+                    <i data-lucide="circle-dot" class="w-4 h-4"></i>
+                    <span class="text-xs font-medium">Auto</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-4 border-t border-[#282828] space-y-4">
+              <h3 class="text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-2">Preferencias</h3>
+              
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-medium text-zinc-200">Work alerts</p>
+                  <p class="text-[11px] text-zinc-500">Get a notification when a task is completed.</p>
+                </div>
+                <input type="checkbox" checked class="w-4 h-4 accent-white rounded bg-[#242424]" />
+              </div>
+
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-medium text-zinc-200">Streaming in real time</p>
+                  <p class="text-[11px] text-zinc-500">Generate tokens progressively via SSE.</p>
+                </div>
+                <input type="checkbox" checked class="w-4 h-4 accent-white rounded bg-[#242424]" />
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 2: Ollama Local -->
+          <div id="settings-tab-ollama" class="settings-tab-content space-y-4 hidden">
+            <div>
+              <h3 class="text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1">Local Ollama Server</h3>
+              <p class="text-xs text-zinc-400">Endpoint for local inference.</p>
+            </div>
+
+            <div class="space-y-3 pt-2">
+              <div>
+                <label class="block text-xs text-zinc-400 mb-1.5" for="settings-ollama-url">Server URL</label>
+                <input type="text" id="settings-ollama-url" value="http://localhost:11434" class="w-full px-3.5 py-2 rounded-xl bg-[#242424] border border-[#2E2E2E] text-xs text-zinc-200 focus:outline-none focus:border-zinc-500 font-mono" />
+              </div>
+
+              <div>
+                <label class="block text-xs text-zinc-400 mb-1.5" for="settings-default-model">Local Default Model</label>
+                <input type="text" id="settings-default-model" placeholder="llama3.2" class="w-full px-3.5 py-2 rounded-xl bg-[#242424] border border-[#2E2E2E] text-xs text-zinc-200 focus:outline-none focus:border-zinc-500" />
+              </div>
+
+              <div class="pt-2">
+                <button id="btn-test-ollama" type="button" class="px-3.5 py-2 rounded-xl bg-[#242424] border border-[#2E2E2E] hover:border-zinc-500 text-xs text-zinc-200 flex items-center gap-2 transition-colors">
+                  <i data-lucide="activity" class="w-3.5 h-3.5 text-zinc-300"></i>
+                  <span>Test Connection</span>
+                </button>
+                <div id="ollama-test-status" class="hidden"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 3: API Keys -->
+          <div id="settings-tab-apikeys" class="settings-tab-content space-y-4 hidden">
+            <div>
+              <h3 class="text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1">API Keys</h3>
+              <p class="text-xs text-zinc-400">Saved on your browser.</p>
+            </div>
+
+            <div class="space-y-3 pt-2">
+              <div>
+                <label class="block text-xs text-zinc-400 mb-1.5" for="settings-gemini-key">Google Gemini API Key</label>
+                <input type="password" id="settings-gemini-key" placeholder="AIzaSy..." class="w-full px-3.5 py-2 rounded-xl bg-[#242424] border border-[#2E2E2E] text-xs text-zinc-200 focus:outline-none focus:border-zinc-500 font-mono" />
+              </div>
+
+              <div>
+                <label class="block text-xs text-zinc-400 mb-1.5" for="settings-hackclub-token">Hack Club AI Token</label>
+                <input type="password" id="settings-hackclub-token" placeholder="Token de acceso..." class="w-full px-3.5 py-2 rounded-xl bg-[#242424] border border-[#2E2E2E] text-xs text-zinc-200 focus:outline-none focus:border-zinc-500 font-mono" />
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 4: System Prompts -->
+          <div id="settings-tab-prompts" class="settings-tab-content space-y-4 hidden">
+            <div>
+              <h3 class="text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1">Master Instruction for the Agent</h3>
+              <p class="text-xs text-zinc-400">Define the base guidelines that the model will follow.</p>
+            </div>
+
+            <div class="pt-2">
+              <textarea id="settings-system-prompt" rows="6" placeholder="You are a helpful assistant..." class="w-full px-3.5 py-2.5 rounded-xl bg-[#242424] border border-[#2E2E2E] text-xs text-zinc-200 focus:outline-none focus:border-zinc-500 resize-none font-mono"></textarea>
+            </div>
+          </div>
+
+          <!-- TAB 5: Custom / Computer -->
+          <div id="settings-tab-custom" class="settings-tab-content space-y-4 hidden">
+            <h3 class="text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1">Customization</h3>
+            <p class="text-xs text-zinc-400">Adjust the visual parameters and shortcuts.</p>
+          </div>
+        </div>
+
+        <!-- Modal Bottom Actions -->
+        <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-[#282828] mt-6">
+          <button id="btn-save-settings" type="button" class="px-4 py-2 rounded-xl bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-semibold transition-colors shadow-md">
+            Save settings
+          </button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ==============================================
+       4. DEDICATED ADMIN MANAGEMENT MODAL
+       ============================================== -->
+  <div id="admin-modal-backdrop" class="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md hidden">
+    <div class="modal-card bg-[#1C1C1C] border border-[#2E2E2E] rounded-3xl max-w-4xl w-full shadow-2xl overflow-hidden flex flex-col h-[600px]">
+      
+      <!-- Top Modal Header -->
+      <div class="px-6 py-4 border-b border-[#282828] flex items-center justify-between shrink-0 bg-[#161616]">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-xl bg-white text-zinc-950 flex items-center justify-center font-bold">
+            <i class="fa-solid fa-archway text-xs"></i>
+          </div>
+          <div>
+            <h2 class="text-sm font-semibold text-zinc-100">Admin Panel</h2>
+            <p class="text-[11px] text-zinc-400">Control of users, limits and metrics of Samaipata</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Admin Tabs -->
+          <div class="flex items-center gap-1 bg-[#212121] p-1 rounded-2xl border border-[#2E2E2E]">
+            <button class="admin-tab-btn px-4 py-1.5 rounded-xl text-xs font-medium bg-[#2A2A2A] text-zinc-100 border border-zinc-500 shadow-sm transition-all" data-admin-tab="users">
+              Usuarios
+            </button>
+            <button class="admin-tab-btn px-4 py-1.5 rounded-xl text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:bg-[#242424] transition-all" data-admin-tab="analytics">
+              Analíticas
+            </button>
+            <button class="admin-tab-btn px-4 py-1.5 rounded-xl text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:bg-[#242424] transition-all" data-admin-tab="evaluations">
+              Evaluaciones ELO
+            </button>
+          </div>
+
+          <button id="btn-close-admin-modal" class="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-[#282828] transition-colors ml-2" title="Cerrar">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Body Area -->
+      <div class="flex-1 overflow-hidden relative bg-[#1C1C1C] flex flex-col p-6">
+        
+        <!-- 1. TAB: USUARIOS -->
+        <div id="admin-tab-users" class="admin-tab-content flex-1 flex flex-col overflow-hidden space-y-4">
+          <div class="flex items-center justify-between gap-4 shrink-0">
+            <div class="relative max-w-sm w-full">
+              <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"></i>
+              <input
+                id="admin-users-search"
+                type="text"
+                placeholder="Buscar por usuario, email o rol..."
+                class="w-full pl-8 pr-3.5 py-1.5 rounded-xl bg-[#242424] border border-[#2E2E2E] text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-zinc-500"
+              />
+            </div>
+            <button onclick="window.loadAdminUsers && window.loadAdminUsers()" class="px-3 py-1.5 rounded-xl bg-[#242424] border border-[#2E2E2E] hover:border-zinc-500 text-xs text-zinc-300 flex items-center gap-1.5 transition-colors">
+              <i data-lucide="rotate-cw" class="w-3 h-3"></i>
+              <span>Refresh</span>
+            </button>
+          </div>
+
+          <!-- Table Container -->
+          <div class="flex-1 overflow-y-auto border border-[#282828] rounded-2xl bg-[#181818]">
+            <table class="w-full text-left border-collapse">
+              <thead class="sticky top-0 bg-[#161616] text-[11px] uppercase tracking-wider text-zinc-400 border-b border-[#282828]">
+                <tr>
+                  <th class="py-2.5 px-3">User</th>
+                  <th class="py-2.5 px-3">Email</th>
+                  <th class="py-2.5 px-3">Role</th>
+                  <th class="py-2.5 px-3">Status</th>
+                  <th class="py-2.5 px-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-users-tbody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Edit User Drawer Overlay -->
+          <div id="admin-user-drawer" class="hidden absolute inset-0 bg-black/60 backdrop-blur-sm z-30 flex items-center justify-center p-4">
+            <div class="bg-[#212121] border border-[#2E2E2E] rounded-3xl p-5 max-w-md w-full shadow-2xl space-y-4">
+              <h3 id="admin-edit-title" class="text-sm font-semibold text-zinc-100">Edit User</h3>
+              
+              <div class="space-y-3 text-xs">
+                <div>
+                  <label class="block text-zinc-400 mb-1">Access Role</label>
+                  <select id="admin-edit-role" class="w-full px-3 py-2 rounded-xl bg-[#181818] border border-[#2E2E2E] text-zinc-200 focus:outline-none">
+                    <option value="user">Standard User</option>
+                    <option value="admin">Administrator</option>
+                  </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-zinc-400 mb-1">Message Limit</label>
+                    <input type="number" id="admin-edit-limit-msgs" placeholder="Ilimitado" class="w-full px-3 py-2 rounded-xl bg-[#181818] border border-[#2E2E2E] text-zinc-200 focus:outline-none" />
+                  </div>
+                  <div>
+                    <label class="block text-zinc-400 mb-1">Token Limit</label>
+                    <input type="number" id="admin-edit-limit-tokens" placeholder="Ilimitado" class="w-full px-3 py-2 rounded-xl bg-[#181818] border border-[#2E2E2E] text-zinc-200 focus:outline-none" />
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-zinc-400 mb-1">Allowed Models (comma-separated)</label>
+                  <input type="text" id="admin-edit-allowed-models" placeholder="Todos los modelos" class="w-full px-3 py-2 rounded-xl bg-[#181818] border border-[#2E2E2E] text-zinc-200 focus:outline-none font-mono" />
+                </div>
+              </div>
+
+              <div class="flex items-center justify-end gap-2 pt-3 border-t border-[#2C2C2C]">
+                <button id="btn-admin-cancel-user" type="button" class="px-3.5 py-1.5 rounded-xl bg-[#282828] text-zinc-300 hover:text-white text-xs transition-colors">
+                  Cancel
+                </button>
+                <button id="btn-admin-save-user" type="button" class="px-4 py-1.5 rounded-xl bg-white hover:bg-zinc-200 text-zinc-950 font-semibold text-xs transition-colors shadow-md">
+                  Save changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. TAB: ANALYTICS -->
+        <div id="admin-tab-analytics" class="admin-tab-content hidden flex-1 overflow-y-auto space-y-6">
+          <div id="admin-analytics-container" class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div class="bg-[#181818] border border-[#282828] p-4 rounded-2xl">
+              <p class="text-[11px] text-zinc-500 uppercase tracking-wider font-medium">Registered Users</p>
+              <h3 id="stat-total-users" class="text-2xl font-bold text-zinc-100 mt-1">0</h3>
+            </div>
+            <div class="bg-[#181818] border border-[#282828] p-4 rounded-2xl">
+              <p class="text-[11px] text-zinc-500 uppercase tracking-wider font-medium">Active Conversations</p>
+              <h3 id="stat-active-convs" class="text-2xl font-bold text-zinc-100 mt-1">0</h3>
+            </div>
+            <div class="bg-[#181818] border border-[#282828] p-4 rounded-2xl">
+              <p class="text-[11px] text-zinc-500 uppercase tracking-wider font-medium">Total Messages</p>
+              <h3 id="stat-total-messages" class="text-2xl font-bold text-zinc-100 mt-1">0</h3>
+            </div>
+            <div class="bg-[#181818] border border-[#282828] p-4 rounded-2xl">
+              <p class="text-[11px] text-zinc-500 uppercase tracking-wider font-medium">Processed Tokens</p>
+              <h3 id="stat-total-tokens" class="text-2xl font-bold text-zinc-100 mt-1">0</h3>
+            </div>
+          </div>
+
+          <div class="bg-[#181818] border border-[#282828] p-5 rounded-2xl space-y-2">
+            <h4 class="text-xs font-semibold text-zinc-200">Server Status</h4>
+            <div class="flex items-center gap-3 pt-2 text-xs">
+              <span class="inline-flex items-center gap-1.5 text-emerald-400">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Backend API Express (Port 5000)
+              </span>
+              <span class="inline-flex items-center gap-1.5 text-zinc-400">
+                <span class="w-2 h-2 rounded-full bg-zinc-500"></span>  SQLite Database (port N/A)
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. TAB: EVALUATIONS -->
+        <div id="admin-tab-evaluations" class="admin-tab-content hidden flex-1 flex flex-col overflow-hidden space-y-4">
+          <div class="flex items-center justify-between shrink-0">
+            <div>
+              <h4 class="text-xs font-semibold text-zinc-200">Model leaderboard (ELO rating)</h4>
+              <p class="text-[11px] text-zinc-400">Scores calculated from the community's positive and negative votes.</p>
+            </div>
+          </div>
+
+          <div class="flex-1 overflow-y-auto border border-[#282828] rounded-2xl bg-[#181818]">
+            <table class="w-full text-left border-collapse">
+              <thead class="sticky top-0 bg-[#161616] text-[11px] uppercase tracking-wider text-zinc-400 border-b border-[#282828]">
+                <tr>
+                  <th class="py-2.5 px-3">Range</th>
+                  <th class="py-2.5 px-3">Model</th>
+                  <th class="py-2.5 px-3">ELO Score</th>
+                  <th class="py-2.5 px-3 text-right">Votes (+ / -)</th>
+                </tr>
+              </thead>
+              <tbody id="admin-evals-tbody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Entry JavaScript Module -->
+  <script type="module" src="js/index.js"></script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap');
+
+:root {
+  --manus-bg: #181818;
+  --manus-card-bg: #212121;
+  --manus-border: #2E2E2E;
+  --manus-text-primary: #ECECEC;
+  --manus-text-secondary: #9E9E9E;
+}
+
+html.dark {
+  --manus-bg: #181818;
+  --manus-card-bg: #212121;
+  --manus-border: #2E2E2E;
+  --manus-text-primary: #EDEDED;
+  --manus-text-secondary: #9E9E9E;
+}
+
+html:not(.dark) {
+  --manus-bg: #F7F7F6;
+  --manus-card-bg: #FFFFFF;
+  --manus-border: #E0E0DC;
+  --manus-text-primary: #1C1C1A;
+  --manus-text-secondary: #5C5B56;
+}
+
+html:not(.dark) body {
+  background-color: #F7F7F6 !important;
+  color: #1C1C1A !important;
+}
+
+html:not(.dark) .bg-\[\#181818\] {
+  background-color: #F7F7F6 !important;
+}
+
+html:not(.dark) .bg-\[\#212121\],
+html:not(.dark) .bg-\[\#1A1A1A\],
+html:not(.dark) .bg-\[\#2A2A2A\] {
+  background-color: #FFFFFF !important;
+  border-color: #E0E0DC !important;
+}
+
+html:not(.dark) .border-\[\#2E2E2E\],
+html:not(.dark) .border-\[\#282828\],
+html:not(.dark) .border-\[\#2A2A2A\],
+html:not(.dark) .border-\[\#2C2C2C\] {
+  border-color: #E0E0DC !important;
+}
+
+html:not(.dark) .text-zinc-100,
+html:not(.dark) .text-zinc-200,
+html:not(.dark) .text-\[\#EDEDED\],
+html:not(.dark) .text-\[\#ECECEC\] {
+  color: #1C1C1A !important;
+}
+
+html:not(.dark) .text-zinc-400,
+html:not(.dark) .text-zinc-300 {
+  color: #5C5B56 !important;
+}
+
+html:not(.dark) .text-zinc-500 {
+  color: #8E8D88 !important;
+}
+
+html:not(.dark) input {
+  background-color: #FFFFFF !important;
+  color: #1C1C1A !important;
+  border-color: #E0E0DC !important;
+}
+
+html:not(.dark) input::placeholder {
+  color: #8E8D88 !important;
+}
+
+/* Light mode button inversion: Black button with White text */
+html:not(.dark) button[type="submit"],
+html:not(.dark) .bg-white.text-zinc-950 {
+  background-color: #181818 !important;
+  color: #FFFFFF !important;
+}
+
+html:not(.dark) button[type="submit"]:hover,
+html:not(.dark) .bg-white.text-zinc-950:hover {
+  background-color: #2D2D2D !important;
+}
+
+body {
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--manus-bg);
+  color: var(--manus-text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.font-serif-manus {
+  font-family: 'Libre Baskerville', Georgia, serif;
+}
