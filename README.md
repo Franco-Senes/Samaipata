@@ -26,20 +26,20 @@
 
 - **Backend**: Node.js, Express.js
 - **Database**: SQLite (`sqlite3`)
-- **Auth**: JWT (`jsonwebtoken`), Bcrypt (`bcryptjs`), Cookie-Parser
-- **Frontend**: HTML5 semántico, CSS3 moderno (Variables CSS, Flexbox/Grid, Responsive), Vanilla JavaScript
+- **Auth**: JWT BCRYPT and cookieparser
+- **Frontend**: html css and js
 - **Ai**: Ollama API, Hack Club AI and Gemini
 
 ---
 
-## Quick start up
+## Quick setup
 
 ### Requirements
 
 1. [Node.js](https://nodejs.org/) (18 or more).
 2. [Ollama](https://ollama.com/) installed and executing in your local machine (`http://localhost:11434`).
 
-### Instalación
+### Instalation
 
 1. **Clone the repo:**
    ```bash
