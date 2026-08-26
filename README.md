@@ -1,45 +1,37 @@
 # Samaipata
-
-**Samaipata** is a platform for local ai. Permits to interact with local models using [Ollama](https://ollama.com/) and cloud integrations like [Hackclub Ai](https://ai.hackclub.com).
-
----
-
-## Characteristics
-
-- **Real time chat support**:
-  - Has support for SSE.
-
--  **Model marketplace**:
-  - A custom model marketplace using diffrent apis.
-
-- **Auth and Security**:
-  - Encryption using Bcrypt!
-
-- **Admin Panel**:
-  - User roles (`user`, `admin`).
-  - Models per user.
-  - Ban and suspension support.
-
----
-
-## Stack 
-
-- **Backend**: Node.js, Express.js
-- **Database**: SQLite (`sqlite3`)
-- **Auth**: JWT BCRYPT and cookieparser
-- **Frontend**: html css and js
-- **Ai**: Ollama API, Hack Club AI and Gemini
-
----
-
-## Quick setup
-
+Samaipata is a custom, full-stack, local-first AI client interface. That works using ollama and Hackclub AI.
+![Samaipata HomeScreen - localhost:5000/index.html](https://i.ibb.co/4RQR5ybR/Screenshot-2026-08-26-175220.png)
+## Notes for stardance reviewers
+1. First i cant put the project on a web server because its meant to be runned locally using ollama like projects like openwebui. I could do a web version that only has hackclub ai and gemini.
+2. I cant do a installer. Why?. Sadly i have a windows pc while most of the reviewers use macos. So you will sadly have to download it manually.
+Thats all! Wish you luck with samaipata
+## Features
+- 1. Multiple api support
+   - Has support for multiple apis like
+   - 1. [Hackclub AI](ai.hackclub.com)
+   - 2. [Gemini](gemini.hackclub.com)
+   - 3. [Ollama](https://ollama.com/)
+- 2. Clean ui
+   - Clean ui inspired by [Manus](manus.im)
+- 3. SSE Support
+   - Support for realtime chat.
+- 4. Custom model marketplace
+   - A custom model marketplace for Hackclub and Local models. Data extracted using the following apis:
+   - 1. Akazwz Cloudflare worker
+   - 2. OllamaDB api
+   - 3. Fallback json file
+- 5. Admin Panel
+   - A custom admin panel with the following features:
+   - 1. User roles
+   - 2. Suspension and ban system
+   - 3. Permited models
+## Instalation
+### Manual
 ### Requirements
 
 1. [Node.js](https://nodejs.org/) (18 or more).
 2. [Ollama](https://ollama.com/) installed and executing in your local machine (`http://localhost:11434`).
 
-### Instalation
 
 1. **Clone the repo:**
    ```bash
@@ -78,35 +70,3 @@
 5. **Access the application:**
    Open in your browser [http://localhost:5000](http://localhost:5000) PORT 5000 by default.
 
----
-
-## Testing
-
-```bash
-npm test
-```
-
-Tests every endpoint
----
-
-## Proyect Layout
-
-```text
-├── index.js              
-├── package.json           
-├── fallback_models.json   
-├── public/                
-│   ├── index.html         
-│   ├── login.html         
-│   ├── marketplace.html   
-│   ├── Icon.ico           
-│   ├── css/               
-│   └── js/                
-└── test/                  
-    └── index.test.js
-```
-
----
-
-## Stardance
-Support this project on [Stardance](https://stardance.hackclub.com/projects/38064).
