@@ -206,7 +206,7 @@ function initForms() {
         showAlert(err.message || 'Registration error occurred');
       } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Create Free Account';
+        submitBtn.textContent = 'Create Account';
       }
     });
   }
