@@ -3,7 +3,7 @@ Samaipata is a custom, full-stack, local-first AI client interface. That works u
 ![Samaipata HomeScreen - localhost:5000/index.html](https://i.ibb.co/4RQR5ybR/Screenshot-2026-08-26-175220.png)
 ## Notes for stardance reviewers
 1. First i cant put the project on a web server because its meant to be runned locally using ollama like projects like openwebui. I could do a web version that only has hackclub ai and gemini.
-2. I cant do a installer. Why?. Sadly i have a windows pc while most of the reviewers use macos. So you will sadly have to download it manually.
+2. The installer currently only works with windows.
 Thats all! Wish you luck with samaipata
 ## Features
 - 1. Multiple api support
@@ -26,6 +26,11 @@ Thats all! Wish you luck with samaipata
    - 2. Suspension and ban system
    - 3. Permited models
 ## Instalation
+### Installer
+- 1. Windows Installer
+  - Currently there is only a windows installer which you can find in releases
+    [Installer](https://github.com/Franco-Senes/Samaipata/releases/tag/%23Samaipata)
+   
 ### Manual
 ### Requirements
 
