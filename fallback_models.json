@@ -48,6 +48,86 @@
     "last_updated": "1 week ago"
   },
   {
+    "model_identifier": "gemini-2.5-flash",
+    "model_name": "Gemini 2.5 Flash",
+    "description": "Google's flagship multimodal model offering frontier speed, advanced reasoning, and multimodal capabilities.",
+    "pulls": 15000000,
+    "labels": ["cloud", "vision", "reasoning"],
+    "last_updated": "Just now"
+  },
+  {
+    "model_identifier": "gemini-2.5-pro",
+    "model_name": "Gemini 2.5 Pro",
+    "description": "Google's premier frontier model for deep reasoning, advanced programming, and complex analytical tasks.",
+    "pulls": 11000000,
+    "labels": ["cloud", "reasoning", "coding"],
+    "last_updated": "Just now"
+  },
+  {
+    "model_identifier": "gemini-2.0-flash",
+    "model_name": "Gemini 2.0 Flash",
+    "description": "Next-generation multimodal model from Google with ultra-low latency, real-time response, and tool calling.",
+    "pulls": 14200000,
+    "labels": ["cloud", "vision", "fast"],
+    "last_updated": "1 week ago"
+  },
+  {
+    "model_identifier": "gemini-2.0-flash-lite",
+    "model_name": "Gemini 2.0 Flash-Lite",
+    "description": "Google's ultra-lightweight, high-speed model optimized for cost efficiency and low-latency tasks.",
+    "pulls": 8900000,
+    "labels": ["cloud", "fast"],
+    "last_updated": "1 week ago"
+  },
+  {
+    "model_identifier": "gemini-2.0-flash-thinking",
+    "model_name": "Gemini 2.0 Flash Thinking",
+    "description": "Google's reasoning model with step-by-step internal reasoning and logic decomposition.",
+    "pulls": 9800000,
+    "labels": ["cloud", "reasoning"],
+    "last_updated": "2 weeks ago"
+  },
+  {
+    "model_identifier": "gemini-2.0-pro-exp",
+    "model_name": "Gemini 2.0 Pro Experimental",
+    "description": "Google's experimental high-intelligence model for demanding analytical and coding tasks.",
+    "pulls": 7600000,
+    "labels": ["cloud", "reasoning", "coding"],
+    "last_updated": "2 weeks ago"
+  },
+  {
+    "model_identifier": "gemini-1.5-pro",
+    "model_name": "Gemini 1.5 Pro",
+    "description": "Google's flagship 2M token context model with state-of-the-art long context audio, video, and text recall.",
+    "pulls": 19500000,
+    "labels": ["cloud", "vision", "2m-context"],
+    "last_updated": "1 month ago"
+  },
+  {
+    "model_identifier": "gemini-1.5-flash",
+    "model_name": "Gemini 1.5 Flash",
+    "description": "Fast and versatile multimodal model from Google built for scalable everyday tasks.",
+    "pulls": 22000000,
+    "labels": ["cloud", "vision", "fast"],
+    "last_updated": "1 month ago"
+  },
+  {
+    "model_identifier": "gemini-1.5-flash-8b",
+    "model_name": "Gemini 1.5 Flash 8B",
+    "description": "High-throughput lightweight multimodal model designed for high-volume tasks.",
+    "pulls": 6500000,
+    "labels": ["cloud", "fast"],
+    "last_updated": "2 months ago"
+  },
+  {
+    "model_identifier": "codegemma",
+    "model_name": "CodeGemma",
+    "description": "Google's specialized open model for code completion, generation, and code understanding.",
+    "pulls": 3800000,
+    "labels": ["2b", "7b"],
+    "last_updated": "5 months ago"
+  },
+  {
     "model_identifier": "gemma3",
     "model_name": "Gemma 3",
     "description": "Google's latest family of lightweight, state-of-the-art open models built from the same research used to create Gemini.",

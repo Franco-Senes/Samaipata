@@ -266,21 +266,6 @@ export async function loadModels() {
       installedModels = [];
     }
 
-    // Dynamic Gemini Models Injection if API key is present
-    const geminiKey = localStorage.getItem('samaipata_gemini_key') || localStorage.getItem('samaipata_gemini_api_key') || '';
-    if (geminiKey) {
-      const geminiList = [
-        { name: 'gemini-1.5-flash', displayName: 'Gemini 1.5 Flash (Google)' },
-        { name: 'gemini-1.5-pro', displayName: 'Gemini 1.5 Pro (Google)' },
-        { name: 'gemini-2.0-flash-exp', displayName: 'Gemini 2.0 Flash Exp (Google)' }
-      ];
-      geminiList.forEach(g => {
-        if (!installedModels.some(m => m.name === g.name)) {
-          installedModels.push(g);
-        }
-      });
-    }
-
     // Fallback if empty
     if (installedModels.length === 0) {
       installedModels = [
@@ -620,7 +605,6 @@ async function sendMessage(messageText) {
 
   try {
     const systemPromptOverride = localStorage.getItem('samaipata_system_instruction') || '';
-    const geminiApiKey = localStorage.getItem('samaipata_gemini_key') || localStorage.getItem('samaipata_gemini_api_key') || '';
     const hackclubApiKey = localStorage.getItem('samaipata_hackclub_token') || localStorage.getItem('samaipata_hackclub_api_key') || '';
     const isHackClubModel = currentModel.includes('/') || installedModels.some(m => m.name === currentModel && m.is_hackclub);
 
@@ -636,7 +620,6 @@ async function sendMessage(messageText) {
         web_search_enabled: isWebSearchEnabled,
         memory_enabled: true,
         system_instruction: systemPromptOverride,
-        gemini_api_key: geminiApiKey,
         hackclub_api_key: hackclubApiKey
       })
     });

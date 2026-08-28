@@ -27,24 +27,83 @@ let currentPullingModel = null;
 
 const OLLAMA_CATALOG = [
   {
+    name: 'gemini-2.5-flash',
+    title: 'Gemini 2.5 Flash',
+    desc: 'Google - Flagship multimodal model offering cutting-edge speed, reasoning, and multimodal capabilities.',
+    downloads: '15M',
+    updated: 'Just now',
+    category: 'Vision',
+    variants: [
+      { tag: 'flash', size: 'Cloud API', context: '1M' }
+    ]
+  },
+  {
+    name: 'gemini-2.5-pro',
+    title: 'Gemini 2.5 Pro',
+    desc: 'Google - Premier frontier model for deep reasoning, advanced programming, and massive context recall.',
+    downloads: '11M',
+    updated: 'Just now',
+    category: 'Reasoning',
+    variants: [
+      { tag: 'pro', size: 'Cloud API', context: '2M' }
+    ]
+  },
+  {
+    name: 'gemini-2.0-flash',
+    title: 'Gemini 2.0 Flash',
+    desc: 'Google - Next-generation multimodal model with ultra-low latency and superior tool calling.',
+    downloads: '14.2M',
+    updated: '1 week ago',
+    category: 'Vision',
+    variants: [
+      { tag: 'flash', size: 'Cloud API', context: '1M' }
+    ]
+  },
+  {
     name: 'gemma3',
     title: 'Gemma 3',
-    desc: 'Google - Familia de modelos abiertos de última generación construidos con la misma investigación y tecnología que los modelos Gemini.',
+    desc: 'Google - Next-generation open model family built using the same research and technology behind Gemini models.',
     downloads: '1.2M',
-    updated: '1 semana atrás',
+    updated: '1 week ago',
     category: 'General',
     variants: [
       { tag: '270m', size: '162MB', context: '128K' },
       { tag: '4b', size: '2.8GB', context: '128K' },
-      { tag: '8b', size: '5.1GB', context: '128K' }
+      { tag: '12b', size: '7.8GB', context: '128K' },
+      { tag: '27b', size: '16GB', context: '128K' }
+    ]
+  },
+  {
+    name: 'gemma2',
+    title: 'Gemma 2',
+    desc: 'Google - High-efficiency open model family featuring an advanced architecture for superior reasoning.',
+    downloads: '5.6M',
+    updated: '4 months ago',
+    category: 'General',
+    variants: [
+      { tag: '2b', size: '1.6GB', context: '8K' },
+      { tag: '9b', size: '5.4GB', context: '8K' },
+      { tag: '27b', size: '16GB', context: '8K' }
+    ]
+  },
+  {
+    name: 'codegemma',
+    title: 'CodeGemma',
+    desc: 'Google - Specialized open model for code completion, generation, and code understanding.',
+    downloads: '3.8M',
+    updated: '5 months ago',
+    category: 'Coding',
+    variants: [
+      { tag: '2b', size: '1.6GB', context: '8K' },
+      { tag: '7b', size: '5.0GB', context: '8K' }
     ]
   },
   {
     name: 'deepseek-r1',
     title: 'DeepSeek-R1',
-    desc: 'DeepSeek - Modelos de razonamiento avanzado de primer nivel capaces de resolver matemáticas, código y lógica compleja.',
+    desc: 'DeepSeek - Advanced first-tier reasoning models capable of solving complex math, coding, and logical tasks.',
     downloads: '8.4M',
-    updated: '2 semanas atrás',
+    updated: '2 weeks ago',
     category: 'Reasoning',
     variants: [
       { tag: '1.5b', size: '1.1GB', context: '128K' },
@@ -58,9 +117,9 @@ const OLLAMA_CATALOG = [
   {
     name: 'llama3.2',
     title: 'Llama 3.2',
-    desc: 'Meta - Modelos ligeros de Meta optimizados para velocidad en inferencia local con consumo mínimo de recursos.',
+    desc: 'Meta - Lightweight models optimized for fast local inference with minimal resource consumption.',
     downloads: '6.1M',
-    updated: '3 semanas atrás',
+    updated: '3 weeks ago',
     category: 'General',
     variants: [
       { tag: '1b', size: '1.3GB', context: '128K' },
@@ -70,9 +129,9 @@ const OLLAMA_CATALOG = [
   {
     name: 'llama3.2-vision',
     title: 'Llama 3.2 Vision',
-    desc: 'Meta - Modelos multimodales optimizados para análisis visual y razonamiento combinado sobre imágenes y texto.',
+    desc: 'Meta - Multimodal models optimized for visual analysis and combined reasoning over images and text.',
     downloads: '2.9M',
-    updated: '1 mes atrás',
+    updated: '1 month ago',
     category: 'Vision',
     variants: [
       { tag: '11b', size: '7.9GB', context: '128K' },
@@ -82,9 +141,9 @@ const OLLAMA_CATALOG = [
   {
     name: 'qwen2.5-coder',
     title: 'Qwen 2.5 Coder',
-    desc: 'Alibaba - Especializado en generación y refactorización de código con soporte de contexto masivo de hasta 128k tokens.',
+    desc: 'Alibaba - Specialized in code generation and refactoring with support for up to 128k context tokens.',
     downloads: '5.2M',
-    updated: '1 semana atrás',
+    updated: '1 week ago',
     category: 'Coding',
     variants: [
       { tag: '1.5b', size: '986MB', context: '128K' },
@@ -96,9 +155,9 @@ const OLLAMA_CATALOG = [
   {
     name: 'mistral',
     title: 'Mistral 7B',
-    desc: 'Mistral AI - Modelo compacto de 7B parámetros con alto rendimiento en comprensión lingüística y tareas analíticas.',
+    desc: 'Mistral AI - Compact 7B parameter model with high performance in language understanding and analytical tasks.',
     downloads: '4.5M',
-    updated: '1 mes atrás',
+    updated: '1 month ago',
     category: 'General',
     variants: [
       { tag: '7b', size: '4.1GB', context: '32K' }
@@ -107,9 +166,9 @@ const OLLAMA_CATALOG = [
   {
     name: 'phi4',
     title: 'Phi-4',
-    desc: 'Microsoft - Modelo de 14B enfocado en razonamiento sintético de alta precisión y matemáticas avanzadas.',
+    desc: 'Microsoft - 14B model focused on high-precision synthetic reasoning and advanced mathematics.',
     downloads: '3.1M',
-    updated: '2 semanas atrás',
+    updated: '2 weeks ago',
     category: 'Reasoning',
     variants: [
       { tag: '14b', size: '9.1GB', context: '128K' }
@@ -319,7 +378,7 @@ function renderModels() {
 
   const catalogMap = new Map();
 
-  // 1. Add all marketplace models from API (170+ models)
+  // 1. Add all marketplace models from API
   marketplaceModels.forEach(m => {
     const key = m.name.toLowerCase();
     const isInstalled = installedModels.some(im => im.name.toLowerCase().startsWith(key) || key.startsWith(im.name.toLowerCase()));
@@ -337,7 +396,7 @@ function renderModels() {
     catalogMap.set(key, {
       name: m.name || m.model_identifier,
       title: m.title || m.model_name || m.name,
-      description: m.description || m.desc || 'Modelo de lenguaje avanzado para inferencia local.',
+      description: m.description || m.desc || 'Advanced language model for local inference.',
       category: m.category || 'General',
       downloads: m.downloads ? `${m.downloads}` : (m.pulls ? `${Math.round(m.pulls / 1000)}k` : 'N/A'),
       variants,
@@ -383,7 +442,7 @@ function renderModels() {
       catalogMap.set(baseName, {
         name: m.name,
         title: m.name,
-        description: `Modelo local instalado (${formatBytes(m.size || 0)})`,
+        description: `Local installed model (${formatBytes(m.size || 0)})`,
         category: 'Local',
         variants: [{ tag, size: formatBytes(m.size || 0), context: '128K' }],
         isInstalled: true,
@@ -420,7 +479,7 @@ function renderModels() {
   if (models.length === 0) {
     grid.innerHTML = `
       <div class="col-span-full py-16 text-center text-zinc-500 text-xs">
-        No se encontraron models con los filtros seleccionados.
+        No models found matching the selected filters.
       </div>
     `;
     return;
@@ -448,13 +507,13 @@ function renderModels() {
                 </span>
               </div>
               <p class="text-[11px] text-zinc-500 mt-0.5">
-                ${m.downloads ? `${m.downloads} descargas • ` : ''}${activeVariant.size || 'Local'}
+                ${m.downloads ? `${m.downloads} downloads • ` : ''}${activeVariant.size || 'Local'}
               </p>
             </div>
 
             ${isThisInstalled
-              ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Instalado</span>`
-              : `<span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#181818] text-zinc-500 border border-[#2A2A2A]">Disponible</span>`
+              ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Installed</span>`
+              : `<span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#181818] text-zinc-500 border border-[#2A2A2A]">Available</span>`
             }
           </div>
 
@@ -464,7 +523,7 @@ function renderModels() {
 
           ${m.variants && m.variants.length > 1 ? `
             <div class="mb-4">
-              <span class="block text-[10px] font-medium text-zinc-500 uppercase tracking-wider mb-1.5">Variantes</span>
+              <span class="block text-[10px] font-medium text-zinc-500 uppercase tracking-wider mb-1.5">Variants</span>
               <div class="flex flex-wrap gap-1.5">
                 ${m.variants.map(v => `
                   <button type="button" onclick="window.selectVariant('${escapeHtml(m.name)}', '${escapeHtml(v.tag)}')" class="px-2 py-1 rounded-lg text-[11px] font-mono border transition-all ${v.tag === activeTag ? 'bg-[#2A2A2A] text-zinc-100 border-zinc-400' : 'bg-[#181818] text-zinc-400 border-[#2A2A2A] hover:text-zinc-200'}">
@@ -485,17 +544,17 @@ function renderModels() {
             ${isThisInstalled
               ? `
                 <button onclick="window.useModelInChat('${escapeHtml(fullName)}')" class="px-3 py-1.5 rounded-xl bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-semibold transition-colors flex items-center gap-1 shadow-sm">
-                  <span>Chatear</span>
+                  <span>Chat</span>
                   <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
                 </button>
-                <button onclick="window.deleteModel('${escapeHtml(fullName)}')" class="p-1.5 rounded-xl text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-colors text-xs" title="Eliminar modelo">
+                <button onclick="window.deleteModel('${escapeHtml(fullName)}')" class="p-1.5 rounded-xl text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-colors text-xs" title="Delete model">
                   <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                 </button>
               `
               : `
                 <button onclick="window.pullModel('${escapeHtml(fullName)}')" ${isPulling ? 'disabled' : ''} class="px-3 py-1.5 rounded-xl bg-[#282828] hover:bg-[#323232] text-zinc-200 text-xs font-medium transition-colors flex items-center gap-1.5">
                   <i data-lucide="download" class="w-3.5 h-3.5 text-zinc-400"></i>
-                  <span>${isPulling ? 'Descargando...' : 'Descargar'}</span>
+                  <span>${isPulling ? 'Downloading...' : 'Download'}</span>
                 </button>
               `
             }
@@ -515,7 +574,7 @@ window.selectVariant = function(modelName, tag) {
 
 window.pullModel = async function(modelName) {
   if (currentPullingModel) {
-    alert('Ya hay una descarga en curso: ' + currentPullingModel);
+    alert('A download is already in progress: ' + currentPullingModel);
     return;
   }
 
@@ -530,7 +589,7 @@ window.pullModel = async function(modelName) {
     });
 
     if (!res.ok) {
-      throw new Error(`Error en el servidor (${res.status})`);
+      throw new Error(`Server error (${res.status})`);
     }
 
     const reader = res.body.getReader();
@@ -558,10 +617,10 @@ window.pullModel = async function(modelName) {
       }
     }
 
-    completePullProgress(true, `Modelo ${modelName} descargado exitosamente.`);
+    completePullProgress(true, `Model ${modelName} downloaded successfully.`);
     await fetchModels();
   } catch (err) {
-    completePullProgress(false, `Fallo en la descarga: ${err.message}`);
+    completePullProgress(false, `Download failed: ${err.message}`);
   } finally {
     currentPullingModel = null;
   }
@@ -581,7 +640,7 @@ function openPullProgressModal(modelName) {
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-sm font-semibold text-zinc-100 flex items-center gap-2">
           <i data-lucide="download-cloud" class="w-4 h-4 text-zinc-300"></i>
-          <span>Descargando: <strong class="text-white">${escapeHtml(modelName)}</strong></span>
+          <span>Downloading: <strong class="text-white">${escapeHtml(modelName)}</strong></span>
         </h3>
       </div>
 
@@ -590,14 +649,14 @@ function openPullProgressModal(modelName) {
           <div id="pull-progress-bar" class="bg-white h-full rounded-full transition-all duration-200" style="width: 0%"></div>
         </div>
         <div class="flex justify-between text-xs text-zinc-400">
-          <span id="pull-status-text">Iniciando descarga...</span>
+          <span id="pull-status-text">Starting download...</span>
           <span id="pull-percent-text">0%</span>
         </div>
       </div>
 
       <div id="pull-modal-actions" class="flex justify-end pt-2">
         <button id="btn-close-pull" class="hidden px-4 py-2 rounded-xl bg-[#282828] hover:bg-[#323232] text-xs text-zinc-200 transition-colors" onclick="document.getElementById('pull-modal').remove()">
-          Cerrar
+          Close
         </button>
       </div>
     </div>
@@ -643,19 +702,19 @@ function completePullProgress(success, msg) {
 }
 
 window.deleteModel = async function(modelName) {
-  if (!confirm(`¿Eliminar el modelo local ${modelName}?`)) return;
+  if (!confirm(`Are you sure you want to delete local model ${modelName}?`)) return;
 
   try {
     const res = await fetch(`/api/models/${encodeURIComponent(modelName)}`, {
       method: 'DELETE'
     });
 
-    if (!res.ok) throw new Error('Error al eliminar');
+    if (!res.ok) throw new Error('Failed to delete model');
 
     installedModels = installedModels.filter(m => m.name !== modelName);
     renderModels();
   } catch (err) {
-    alert(err.message || 'Error al eliminar');
+    alert(err.message || 'Failed to delete model');
   }
 };
 
@@ -678,14 +737,14 @@ function getStoredPrompts() {
     {
       id: 'default-coding',
       title: 'Senior Software Engineer',
-      description: 'Experto en código limpio, arquitecturas escalables y buenas prácticas.',
-      prompt: 'Eres un ingeniero de software principal de clase mundial. Responde con soluciones concisas, código limpio, modular y bien estructurado.'
+      description: 'Expert in clean code, scalable architectures, and best practices.',
+      prompt: 'You are a world-class principal software engineer. Respond with concise solutions, clean, modular, and well-structured code.'
     },
     {
       id: 'default-analyst',
-      title: 'Analista & Estratega',
-      description: 'Estructuración de datos, síntesis ejecutivas y análisis crítico.',
-      prompt: 'Eres un analista estratégico. Desglosa problemas complejos en partes comprensibles y presenta hallazgos claros en viñetas estructuradas.'
+      title: 'Analyst & Strategist',
+      description: 'Data structuring, executive synthesis, and critical analysis.',
+      prompt: 'You are a strategic analyst. Break down complex problems into comprehensible parts and present clear findings in structured bullet points.'
     }
   ];
 
@@ -718,7 +777,7 @@ function renderPrompts() {
   if (prompts.length === 0) {
     container.innerHTML = `
       <div class="col-span-full py-12 text-center text-zinc-500 text-xs">
-        No hay System Prompts guardados. ¡Crea el primero!
+        No saved System Prompts found. Create your first one!
       </div>
     `;
     return;
@@ -730,10 +789,10 @@ function renderPrompts() {
         <div class="flex items-center justify-between mb-2">
           <h3 class="text-sm font-semibold text-zinc-100">${escapeHtml(p.title)}</h3>
           <div class="flex items-center gap-1.5">
-            <button onclick="window.editPrompt('${p.id}')" class="p-1 rounded text-zinc-400 hover:text-zinc-200" title="Editar">
+            <button onclick="window.editPrompt('${p.id}')" class="p-1 rounded text-zinc-400 hover:text-zinc-200" title="Edit">
               <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
             </button>
-            <button onclick="window.deletePrompt('${p.id}')" class="p-1 rounded text-red-400 hover:text-red-300" title="Eliminar">
+            <button onclick="window.deletePrompt('${p.id}')" class="p-1 rounded text-red-400 hover:text-red-300" title="Delete">
               <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
             </button>
           </div>
@@ -746,7 +805,7 @@ function renderPrompts() {
 
       <div class="pt-3 border-t border-[#2A2A2A] flex justify-end">
         <button onclick="window.activatePrompt('${p.id}')" class="px-3.5 py-1.5 rounded-xl bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-sm">
-          <span>Usar en Chat</span>
+          <span>Use in Chat</span>
           <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
         </button>
       </div>
@@ -768,29 +827,29 @@ window.openPromptEditor = function(promptData = null) {
   modal.innerHTML = `
     <div class="bg-[#212121] border border-[#2E2E2E] rounded-3xl p-6 max-w-lg w-full shadow-2xl">
       <h3 class="text-base font-semibold text-zinc-100 mb-4">
-        ${promptData ? 'Editar System Prompt' : 'Nuevo System Prompt'}
+        ${promptData ? 'Edit System Prompt' : 'New System Prompt'}
       </h3>
 
       <form id="form-prompt" class="space-y-4">
         <input type="hidden" id="prompt-id" value="${promptData ? promptData.id : ''}" />
         <div>
-          <label class="block text-xs font-medium text-zinc-400 mb-1">Título</label>
-          <input type="text" id="prompt-title" required value="${promptData ? escapeHtml(promptData.title) : ''}" placeholder="Ej. Asistente Python" class="w-full px-3.5 py-2 rounded-xl bg-[#181818] border border-[#2E2E2E] text-xs text-zinc-100 focus:outline-none focus:border-zinc-500" />
+          <label class="block text-xs font-medium text-zinc-400 mb-1">Title</label>
+          <input type="text" id="prompt-title" required value="${promptData ? escapeHtml(promptData.title) : ''}" placeholder="e.g. Python Assistant" class="w-full px-3.5 py-2 rounded-xl bg-[#181818] border border-[#2E2E2E] text-xs text-zinc-100 focus:outline-none focus:border-zinc-500" />
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-zinc-400 mb-1">Descripción Breve</label>
-          <input type="text" id="prompt-desc" value="${promptData ? escapeHtml(promptData.description) : ''}" placeholder="Ej. Especializado en refactorización" class="w-full px-3.5 py-2 rounded-xl bg-[#181818] border border-[#2E2E2E] text-xs text-zinc-100 focus:outline-none focus:border-zinc-500" />
+          <label class="block text-xs font-medium text-zinc-400 mb-1">Short Description</label>
+          <input type="text" id="prompt-desc" value="${promptData ? escapeHtml(promptData.description) : ''}" placeholder="e.g. Specialized in code refactoring" class="w-full px-3.5 py-2 rounded-xl bg-[#181818] border border-[#2E2E2E] text-xs text-zinc-100 focus:outline-none focus:border-zinc-500" />
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-zinc-400 mb-1">Instrucciones del Sistema</label>
-          <textarea id="prompt-content" rows="5" required placeholder="Escribe aquí las directrices..." class="w-full px-3.5 py-2 rounded-xl bg-[#181818] border border-[#2E2E2E] text-xs text-zinc-100 focus:outline-none focus:border-zinc-500 resize-none font-mono">${promptData ? escapeHtml(promptData.prompt) : ''}</textarea>
+          <label class="block text-xs font-medium text-zinc-400 mb-1">System Instructions</label>
+          <textarea id="prompt-content" rows="5" required placeholder="Write your system instructions here..." class="w-full px-3.5 py-2 rounded-xl bg-[#181818] border border-[#2E2E2E] text-xs text-zinc-100 focus:outline-none focus:border-zinc-500 resize-none font-mono">${promptData ? escapeHtml(promptData.prompt) : ''}</textarea>
         </div>
 
         <div class="flex justify-end gap-2 pt-2">
-          <button type="button" onclick="document.getElementById('prompt-editor-modal').remove()" class="px-4 py-2 rounded-xl bg-[#282828] hover:bg-[#323232] text-zinc-300 text-xs">Cancelar</button>
-          <button type="submit" class="px-4 py-2 rounded-xl bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-semibold">Guardar</button>
+          <button type="button" onclick="document.getElementById('prompt-editor-modal').remove()" class="px-4 py-2 rounded-xl bg-[#282828] hover:bg-[#323232] text-zinc-300 text-xs">Cancel</button>
+          <button type="submit" class="px-4 py-2 rounded-xl bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-semibold">Save</button>
         </div>
       </form>
     </div>
@@ -826,7 +885,7 @@ window.editPrompt = function(id) {
 };
 
 window.deletePrompt = function(id) {
-  if (!confirm('¿Deseas eliminar este System Prompt?')) return;
+  if (!confirm('Are you sure you want to delete this System Prompt?')) return;
   let prompts = getStoredPrompts();
   prompts = prompts.filter(p => p.id !== id);
   saveStoredPrompts(prompts);

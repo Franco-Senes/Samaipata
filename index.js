@@ -242,14 +242,14 @@ app.post('/api/auth/register', async (req, res) => {
     }
     try {
         const passwordHash = await bcrypt.hash(password, 12);
-        const countRow = await dbGet('SELECT COUNT(*) as count FROM users');
-        const role = countRow.count === 0 ? 'admin' : 'user';
+        const adminCountRow = await dbGet('SELECT COUNT(*) as count FROM users WHERE role = "admin"');
+        const role = adminCountRow.count === 0 ? 'admin' : 'user';
 
         const result = await dbRun(
             'INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)',
-            [username, email, passwordHash, role]
+            [username.trim(), email.trim().toLowerCase(), passwordHash, role]
         );
-        const token = jwt.sign({ id: result.lastID, email, role }, JWT_SECRET, { expiresIn: '7d' });
+        const token = jwt.sign({ id: result.lastID, email: email.trim().toLowerCase(), role }, JWT_SECRET, { expiresIn: '7d' });
         res.cookie('samaipata_session', token, {
             httpOnly: true,
             secure: false, // ts will never be running through https
@@ -257,7 +257,7 @@ app.post('/api/auth/register', async (req, res) => {
             path: '/',
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
-        res.status(201).json({ token, id: result.lastID, username, email, role });
+        res.status(201).json({ token, id: result.lastID, username: username.trim(), email: email.trim().toLowerCase(), role });
     } catch (err) {
         if (err.message && err.message.includes('UNIQUE constraint failed')) {
             return res.status(400).json({ error: 'Username or email already exists' });
@@ -284,12 +284,13 @@ const loginLimiter = (req, res, next) => {
 // Login
 
 app.post('/api/auth/login', loginLimiter, async (req, res) => {
-    const { email, password } = req.body;
-    if (!email || !password) {
+    const identifier = (req.body.email || req.body.username || '').trim();
+    const { password } = req.body;
+    if (!identifier || !password) {
         return res.status(400).json({ error: 'All fields are required' });
     }
     try {
-        const user = await dbGet('SELECT * FROM users WHERE email = ?', [email]);
+        const user = await dbGet('SELECT * FROM users WHERE LOWER(email) = LOWER(?) OR LOWER(username) = LOWER(?)', [identifier, identifier]);
         if (!user) {
             return res.status(400).json({ error: 'User not found.' });
         }
@@ -312,6 +313,14 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
         if (!match) {
             return res.status(400).json({ error: 'Password incorrect.' });
         }
+
+        // If there are no admins registered in the database, promote this user to admin
+        const adminCountRow = await dbGet('SELECT COUNT(*) as count FROM users WHERE role = "admin"');
+        if (adminCountRow.count === 0 && user.role !== 'admin') {
+            await dbRun('UPDATE users SET role = "admin" WHERE id = ?', [user.id]);
+            user.role = 'admin';
+        }
+
         // sign in user
         const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
         // create cookie
@@ -418,20 +427,20 @@ app.get('/callback', async (req, res) => {
         const zeroProfile = await profileResponse.json();
         const email = zeroProfile.email || '';
         const username = zeroProfile.username || zeroProfile.name || zeroProfile.preferred_username || (email ? email.split('@')[0] : user);
-        const avatar_url = zeroProfle.avatar_url || zeroProfile.picture || '';
+        const avatar_url = zeroProfile.avatar_url || zeroProfile.picture || '';
 
         let user = await dbGet('SELECT * FROM users WHERE email = ?', [email]);
         if (!user) {
-            const countRow = await dbGet('SELECT COUNT(*) as count FROM users');
-            const role = countRow.count === 0 ? 'admin' : 'user';
+            const adminCountRow = await dbGet('SELECT COUNT(*) as count FROM users WHERE role = "admin"');
+            const role = adminCountRow.count === 0 ? 'admin' : 'user';
 
             const uniqueUsername = username + '_' + Math.random().toString(36).substring(2, 6);
             const randomPasswordHash = await bcrypt.hash(crypto.randomBytes(16).toString('hex'), 12);
             const result = await dbRun(
-                'INSERT INTO users (username, email, password_hash. avatar_url, role) VALUES (?, ?, ?, ?, ?)',
+                'INSERT INTO users (username, email, password_hash, avatar_url, role) VALUES (?, ?, ?, ?, ?)',
                 [username || uniqueUsername, email, randomPasswordHash, avatar_url, role]
             );
-            user = {id: result.LastID, username: username || uniqueUsername, email, avatar_url, role};
+            user = { id: result.lastID, username: username || uniqueUsername, email, avatar_url, role };
         } else if (avatar_url && user.avatar_url !== avatar_url) {
             await dbRun('UPDATE users SET avatar_url = ? WHERE id = ?', [avatar_url, user.id]);
             user.avatar_url = avatar_url;
@@ -1137,7 +1146,7 @@ async function getIpLocation(ip) {
 async function extractAndStoreMemory(userId, userMsg, aiResponse, modelName) {
     try {
         let extractorModel = modelName;
-        if (modelName.toLowerCase().startsWith('gemini-') || modelName.includes('/')) {
+        if (modelName.includes('/')) {
             try {
                 const ollamaRes = await fetch(`${OLLAMA}/api/tags`);
                 if (ollamaRes.ok) {
@@ -1426,85 +1435,6 @@ IMPORTANT: Do NOT plainly output or announce your metadata, model details, or us
         historyRows.forEach(row => {
             messagesPayload.push({ role: row.role, content: row.content });
         });
-
-        const isGemini = model_name.toLowerCase().startsWith('gemini-');
-        const geminiApiKey = req.body.gemini_api_key;
-
-        if (isGemini && geminiApiKey) {
-            const geminiContents = [];
-            
-            historyRows.forEach(row => {
-                const role = row.role === 'assistant' ? 'model' : 'user';
-                geminiContents.push({
-                    role: role,
-                    parts: [{ text: row.content }]
-                });
-            });
-
-            const startTime = Date.now();
-            const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model_name}:streamGenerateContent?key=${geminiApiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: geminiContents,
-                    systemInstruction: {
-                        parts: [{ text: systemPrompt }]
-                    }
-                })
-            });
-
-            if (!geminiRes.ok) {
-                const errText = await geminiRes.text();
-                res.write(`data: ${JSON.stringify({ error: `Error de API Gemini: ${errText}` })}\n\n`);
-                return res.end();
-            }
-
-            const reader = geminiRes.body.getReader();
-            const decoder = new TextDecoder();
-            let buffer = '';
-            let fullAiResponse = '';
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                buffer += decoder.decode(value, { stream: true });
-                
-                const lines = buffer.split('\n');
-                buffer = lines.pop();
-
-                for (const line of lines) {
-                    if (line.trim()) {
-                        let cleanLine = line.trim();
-                        if (cleanLine.startsWith(',')) cleanLine = cleanLine.substring(1).trim();
-                        if (cleanLine.startsWith('[')) cleanLine = cleanLine.substring(1).trim();
-                        if (cleanLine.endsWith(']')) cleanLine = cleanLine.substring(0, cleanLine.length - 1).trim();
-
-                        try {
-                            const parsed = JSON.parse(cleanLine);
-                            if (parsed.candidates && parsed.candidates[0].content && parsed.candidates[0].content.parts[0].text) {
-                                const text = parsed.candidates[0].content.parts[0].text;
-                                fullAiResponse += text;
-                                res.write(`data: ${JSON.stringify({ content: text })}\n\n`);
-                            }
-                        } catch (e) {
-                        }
-                    }
-                }
-            }
-
-            const durationMs = Date.now() - startTime;
-            const assistantTokens = Math.ceil(fullAiResponse.length / 4);
-            await dbRun(
-                'INSERT INTO messages (conversation_id, role, content, tokens) VALUES (?, ?, ?, ?)',
-                [conversation_id, 'assistant', fullAiResponse, assistantTokens]
-            );
-
-            res.write(`data: ${JSON.stringify({ done: true, duration_ms: durationMs })}\n\n`);
-            res.end();
-            
-            extractAndStoreMemory(req.user.id, message_content, fullAiResponse, model_name);
-            return;
-        }
 
         const isHackClub = model_name.includes('/') || req.body.is_hackclub || req.body.isHackClub;
         let hackclubApiKey = req.body.hackclub_api_key || HACKCLUB_API_KEY;

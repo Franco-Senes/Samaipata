@@ -56,7 +56,6 @@ function bindSettingsTabs() {
 export function loadSettingsValues() {
   const theme = localStorage.getItem('samaipata_theme') || 'dark';
   const ollamaUrl = localStorage.getItem('samaipata_ollama_url') || 'http://localhost:11434';
-  const geminiKey = localStorage.getItem('samaipata_gemini_key') || localStorage.getItem('samaipata_gemini_api_key') || '';
   const hackclubToken = localStorage.getItem('samaipata_hackclub_token') || localStorage.getItem('samaipata_hackclub_api_key') || '';
   const defaultModel = localStorage.getItem('samaipata_default_model') || 'llama3.2';
   const systemPrompt = localStorage.getItem('samaipata_system_instruction') || '';
@@ -68,14 +67,12 @@ export function loadSettingsValues() {
 
   const elOllamaUrl = document.getElementById('settings-ollama-url');
   const elDefaultModel = document.getElementById('settings-default-model');
-  const elGeminiKey = document.getElementById('settings-gemini-key');
   const elHackClubToken = document.getElementById('settings-hackclub-token');
   const elSystemPrompt = document.getElementById('settings-system-prompt');
   const elLang = document.getElementById('settings-lang');
 
   if (elOllamaUrl) elOllamaUrl.value = ollamaUrl;
   if (elDefaultModel) elDefaultModel.value = defaultModel;
-  if (elGeminiKey) elGeminiKey.value = geminiKey;
   if (elHackClubToken) elHackClubToken.value = hackclubToken;
   if (elSystemPrompt) elSystemPrompt.value = systemPrompt;
   if (elLang) elLang.value = lang;
@@ -128,7 +125,6 @@ function bindSettingsEvents() {
     btnSave.addEventListener('click', async () => {
       const ollamaUrl = document.getElementById('settings-ollama-url')?.value.trim() || 'http://localhost:11434';
       const defaultModel = document.getElementById('settings-default-model')?.value.trim() || 'llama3.2';
-      const geminiKey = document.getElementById('settings-gemini-key')?.value.trim() || '';
       const hackclubToken = document.getElementById('settings-hackclub-token')?.value.trim() || '';
       const systemPrompt = document.getElementById('settings-system-prompt')?.value.trim() || '';
       const lang = document.getElementById('settings-lang')?.value || 'es-latam';
@@ -136,8 +132,8 @@ function bindSettingsEvents() {
       localStorage.setItem('samaipata_ollama_url', ollamaUrl);
       localStorage.setItem('samaipata_default_model', defaultModel);
       localStorage.setItem('samaipata_selected_model', defaultModel);
-      localStorage.setItem('samaipata_gemini_key', geminiKey);
-      localStorage.setItem('samaipata_gemini_api_key', geminiKey);
+      localStorage.removeItem('samaipata_gemini_key');
+      localStorage.removeItem('samaipata_gemini_api_key');
       localStorage.setItem('samaipata_hackclub_token', hackclubToken);
       localStorage.setItem('samaipata_hackclub_api_key', hackclubToken);
       localStorage.setItem('samaipata_system_instruction', systemPrompt);
