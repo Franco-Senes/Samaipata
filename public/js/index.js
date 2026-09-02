@@ -1,8 +1,11 @@
 // public/js/index.js
 import { initSettings, openSettingsModal } from './settings.js';
-import { initAdmin, checkAdminAccess, loadAdminUsers } from './admin.js';
+import { initAdmin, checkAdminAccess, loadAdminUsers, openAdminModal, openAdminWelcomeModal } from './admin.js';
 
 window.loadAdminUsers = loadAdminUsers;
+window.openAdminModal = openAdminModal;
+window.openSettingsModal = openSettingsModal;
+window.openAdminWelcomeModal = openAdminWelcomeModal;
 
 // 1. Global Fetch Interceptor for Auth Token
 const originalFetch = window.fetch;
@@ -26,7 +29,7 @@ window.fetch = async function (url, options = {}) {
 // Global App State
 let currentUser = null;
 let currentConversationId = null;
-let currentModel = localStorage.getItem('samaipata_default_model') || localStorage.getItem('samaipata_selected_model') || 'llama3.2';
+let currentModel = localStorage.getItem('samaipata_default_model') || localStorage.getItem('samaipata_selected_model') || null;
 let installedModels = [];
 let isGenerating = false;
 let abortController = null;
@@ -90,6 +93,17 @@ async function checkAuthSession() {
       currentUser = data.user || data;
       localStorage.setItem('samaipata_user', JSON.stringify(currentUser));
       updateUserUI(currentUser);
+
+      // Trigger first-time admin welcome modal
+      const isAdmin = currentUser.role === 'admin' || currentUser.isAdmin;
+      const setupCompleted = currentUser.setup_completed === 1 || currentUser.setup_completed === true;
+      const localSetupDone = localStorage.getItem('samaipata_admin_setup_done') === 'true';
+
+      if (isAdmin && !setupCompleted && !localSetupDone) {
+        setTimeout(() => {
+          openAdminWelcomeModal();
+        }, 300);
+      }
     } else {
       redirectToLogin();
     }
@@ -266,34 +280,33 @@ export async function loadModels() {
       installedModels = [];
     }
 
-    // Fallback if empty
     if (installedModels.length === 0) {
-      installedModels = [
-        { name: 'llama3.2', displayName: 'Llama 3.2 (Local)' },
-        { name: 'deepseek-r1:8b', displayName: 'DeepSeek R1 (Local)' }
-      ];
-    }
-
-    // If query param set
-    const urlParams = new URLSearchParams(window.location.search);
-    const paramModel = urlParams.get('model');
-    if (paramModel) {
-      currentModel = paramModel;
-      localStorage.setItem('samaipata_default_model', currentModel);
+      currentModel = null;
+      localStorage.removeItem('samaipata_default_model');
+      localStorage.removeItem('samaipata_selected_model');
     } else {
-      const saved = localStorage.getItem('samaipata_default_model') || localStorage.getItem('samaipata_selected_model');
-      if (saved && installedModels.some(m => m.name === saved)) {
-        currentModel = saved;
-      } else if (installedModels.length > 0) {
-        currentModel = installedModels[0].name;
+      // If query param set
+      const urlParams = new URLSearchParams(window.location.search);
+      const paramModel = urlParams.get('model');
+      if (paramModel && installedModels.some(m => m.name === paramModel)) {
+        currentModel = paramModel;
         localStorage.setItem('samaipata_default_model', currentModel);
+      } else {
+        const saved = localStorage.getItem('samaipata_default_model') || localStorage.getItem('samaipata_selected_model');
+        if (saved && installedModels.some(m => m.name === saved)) {
+          currentModel = saved;
+        } else {
+          currentModel = installedModels[0].name;
+          localStorage.setItem('samaipata_default_model', currentModel);
+        }
       }
     }
 
     renderModelPickerDropdown();
   } catch (err) {
     console.error('Failed to load models:', err);
-    installedModels = [{ name: 'llama3.2' }];
+    installedModels = [];
+    currentModel = null;
     renderModelPickerDropdown();
   }
 }
@@ -303,9 +316,53 @@ function renderModelPickerDropdown() {
   const dropdown = document.getElementById('model-picker-dropdown');
   const modelPickerBtn = document.getElementById('btn-model-picker');
 
+  if (installedModels.length === 0) {
+    if (modelBadge) {
+      modelBadge.textContent = 'No models setup';
+    }
+    if (dropdown) {
+      dropdown.innerHTML = `
+        <div class="p-3 text-center text-xs text-zinc-400 space-y-2">
+          <p class="font-medium text-zinc-300">No models setup</p>
+          <p class="text-[11px] text-zinc-500">Neither Ollama nor Hack Club AI is connected.</p>
+          <button type="button" id="btn-dropdown-setup-ai" class="w-full py-1.5 px-2 bg-[#2A2A2A] hover:bg-[#333] border border-[#3A3A3A] text-zinc-200 rounded-xl text-xs font-medium transition-colors flex items-center justify-center gap-1.5">
+            <i data-lucide="settings" class="w-3.5 h-3.5 text-zinc-400"></i>
+            <span>Setup AI Services</span>
+          </button>
+        </div>
+      `;
+      const btnSetup = dropdown.querySelector('#btn-dropdown-setup-ai');
+      if (btnSetup) {
+        btnSetup.onclick = (e) => {
+          e.stopPropagation();
+          dropdown.classList.add('hidden');
+          if (currentUser && (currentUser.role === 'admin' || currentUser.isAdmin)) {
+            openAdminModal('setup');
+          } else {
+            openSettingsModal('apikeys');
+          }
+        };
+      }
+    }
+
+    if (modelPickerBtn) {
+      modelPickerBtn.onclick = (e) => {
+        e.stopPropagation();
+        dropdown.classList.toggle('hidden');
+      };
+
+      document.onclick = () => {
+        dropdown.classList.add('hidden');
+      };
+    }
+
+    initLucide();
+    return;
+  }
+
   if (modelBadge) {
     const currentObj = installedModels.find(m => m.name === currentModel);
-    modelBadge.textContent = (currentObj && (currentObj.displayName || currentObj.name)) || currentModel;
+    modelBadge.textContent = (currentObj && (currentObj.displayName || currentObj.name)) || currentModel || 'Select model';
   }
 
   if (!dropdown) return;
@@ -580,6 +637,55 @@ async function sendMessage(messageText) {
     fullMessage += `\n\n[Archivos adjuntos: ${attachedFiles.join(', ')}]`;
     attachedFiles = [];
     renderAttachmentPills();
+  }
+
+  // If no services or models are setup, show immediate error message
+  if (!currentModel || installedModels.length === 0) {
+    const heroInput = document.getElementById('prompt-input');
+    const activeInput = document.getElementById('active-prompt-input');
+    if (heroInput) { heroInput.value = ''; heroInput.style.height = 'auto'; }
+    if (activeInput) { activeInput.value = ''; activeInput.style.height = 'auto'; }
+
+    document.getElementById('hero-welcome')?.classList.add('hidden');
+    document.getElementById('chat-scroll-view')?.classList.remove('hidden');
+    document.getElementById('active-chat-input-bar')?.classList.remove('hidden');
+
+    appendMessageToUI('user', fullMessage);
+
+    const botMessageId = 'msg-' + Date.now();
+    appendMessageToUI('assistant', '', botMessageId);
+
+    const botMessageContentEl = document.getElementById(`content-${botMessageId}`);
+    if (botMessageContentEl) {
+      botMessageContentEl.innerHTML = `
+        <div class="p-4 bg-red-500/10 border border-red-500/25 rounded-2xl text-xs text-zinc-200 space-y-2.5">
+          <div class="flex items-center gap-2 font-semibold text-red-400">
+            <i data-lucide="alert-circle" class="w-4 h-4 text-red-400 shrink-0"></i>
+            <span>No AI Models Available</span>
+          </div>
+          <p class="text-zinc-300 leading-relaxed">No API keys are setup or Ollama is not running. Please configure your Hack Club AI API key or make sure Ollama is installed and running.</p>
+          <div class="pt-1">
+            <button id="btn-chat-error-setup" class="px-3 py-1.5 rounded-xl bg-[#282828] hover:bg-[#323232] text-zinc-200 border border-[#3A3A3A] transition-colors inline-flex items-center gap-1.5 text-xs font-medium">
+              <i data-lucide="settings" class="w-3.5 h-3.5 text-zinc-400"></i>
+              <span>Setup AI Services</span>
+            </button>
+          </div>
+        </div>
+      `;
+      const btnSetup = botMessageContentEl.querySelector('#btn-chat-error-setup');
+      if (btnSetup) {
+        btnSetup.onclick = () => {
+          if (currentUser && (currentUser.role === 'admin' || currentUser.isAdmin)) {
+            openAdminModal('setup');
+          } else {
+            openSettingsModal('apikeys');
+          }
+        };
+      }
+      initLucide();
+      scrollToBottom();
+    }
+    return;
   }
 
   // Clear inputs

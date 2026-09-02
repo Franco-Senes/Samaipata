@@ -514,9 +514,75 @@ describe('Samaipata - index.js Test Suite', () => {
     });
 
     // -------------------------------------------------------------
-    // 7. OLLAMA INFERENCE / STREAMING TESTS (SKIPPED PER USER REQUEST)
+    // 7. NEW FEATURES: Setup, Ollama Status & Model Unavailability
     // -------------------------------------------------------------
-    describe('7. Ollama AI Inference & Streaming (Skipped)', () => {
+    describe('7. AI Services Setup, Ollama Status & Error Handling', () => {
+        it('GET /api/models returns empty array when no services are connected', async () => {
+            const res = await makeRequest('/api/models', {
+                cookie: userCookie
+            });
+
+            assert.strictEqual(res.status, 200);
+            assert.ok(Array.isArray(res.body), 'Models should be an array');
+        });
+
+        it('GET /api/system/ollama-status returns system status structure', async () => {
+            const res = await makeRequest('/api/system/ollama-status', {
+                cookie: adminCookie
+            });
+
+            assert.strictEqual(res.status, 200);
+            assert.strictEqual(typeof res.body.installed, 'boolean');
+            assert.strictEqual(typeof res.body.running, 'boolean');
+            assert.strictEqual(typeof res.body.modelsCount, 'number');
+            assert.ok(Array.isArray(res.body.models));
+        });
+
+        it('POST /api/admin/complete-setup marks setup as completed for admin', async () => {
+            const res = await makeRequest('/api/admin/complete-setup', {
+                method: 'POST',
+                cookie: adminCookie
+            });
+
+            assert.strictEqual(res.status, 200);
+            assert.strictEqual(res.body.success, true);
+
+            // Verify in /api/auth/me
+            const meRes = await makeRequest('/api/auth/me', {
+                cookie: adminCookie
+            });
+            assert.strictEqual(meRes.status, 200);
+            assert.strictEqual(meRes.body.setup_completed, 1);
+        });
+
+        it('POST /api/admin/complete-setup denies access for regular users with 403', async () => {
+            const res = await makeRequest('/api/admin/complete-setup', {
+                method: 'POST',
+                cookie: userCookie
+            });
+
+            assert.strictEqual(res.status, 403);
+        });
+
+        it('POST /api/chat returns error when model_name is missing or empty', async () => {
+            const res = await makeRequest('/api/chat', {
+                method: 'POST',
+                cookie: adminCookie,
+                body: {
+                    model_name: '',
+                    message_content: 'Hello'
+                }
+            });
+
+            const bodyStr = typeof res.body === 'string' ? res.body : JSON.stringify(res.body);
+            assert.ok(bodyStr.includes('No API keys are setup or Ollama is not running'));
+        });
+    });
+
+    // -------------------------------------------------------------
+    // 8. OLLAMA INFERENCE / STREAMING TESTS (SKIPPED PER USER REQUEST)
+    // -------------------------------------------------------------
+    describe('8. Ollama AI Inference & Streaming (Skipped)', () => {
         it('Live Ollama inference streaming test (SKIPPED: low-spec hardware optimization)', (t) => {
             t.skip('Skipping live Ollama test because local Ollama model execution is too resource intensive on this hardware.');
         });

@@ -171,7 +171,7 @@ function bindSettingsEvents() {
       if (statusEl) {
         statusEl.classList.remove('hidden');
         statusEl.className = 'text-xs text-zinc-400 mt-2 flex items-center gap-1.5';
-        statusEl.innerHTML = `<span class="inline-block animate-spin mr-1">◌</span> Conectando con ${url}...`;
+        statusEl.innerHTML = `<span class="inline-block animate-spin mr-1">◌</span> Connecting to ${url}...`;
 
         try {
           const res = await fetch('/api/models');
@@ -179,13 +179,13 @@ function bindSettingsEvents() {
             const data = await res.json();
             const count = Array.isArray(data) ? data.length : (data.models || []).length;
             statusEl.className = 'text-xs text-emerald-400 mt-2 flex items-center gap-1.5';
-            statusEl.innerHTML = `Conexión exitosa (${count} modelos locales detectados)`;
+            statusEl.innerHTML = `Connection successful (${count} local models detected)`;
           } else {
             throw new Error(`HTTP ${res.status}`);
           }
         } catch (err) {
           statusEl.className = 'text-xs text-red-400 mt-2 flex items-center gap-1.5';
-          statusEl.innerHTML = `Sin conexión: ${err.message}`;
+          statusEl.innerHTML = `No connection: ${err.message}`;
         }
       }
     });

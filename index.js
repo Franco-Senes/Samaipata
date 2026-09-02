@@ -87,12 +87,14 @@ function createTables() {
                 can_manage_models INTEGER DEFAULT 1,
                 rate_limits_per_model TEXT DEFAULT NULL,
                 hackclub_api_key TEXT DEFAULT NULL,
+                setup_completed INTEGER DEFAULT 0,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         `);
 
         // Migration to add hackclub_api_key if missing
         db.run(`ALTER TABLE users ADD COLUMN hackclub_api_key TEXT`, () => {});
+        db.run(`ALTER TABLE users ADD COLUMN setup_completed INTEGER DEFAULT 0`, () => {});
 
         // conversations
         db.run(`
@@ -164,6 +166,7 @@ function createTables() {
             { table: 'users', col: 'rate_limit_tokens', type: "INTEGER DEFAULT NULL" },
             { table: 'users', col: 'can_manage_models', type: "INTEGER DEFAULT 1" },
             { table: 'users', col: 'rate_limits_per_model', type: "TEXT DEFAULT NULL" },
+            { table: 'users', col: 'setup_completed', type: "INTEGER DEFAULT 0" },
             { table: 'messages', col: 'tokens', type: "INTEGER DEFAULT 0" }
         ];
 
@@ -203,7 +206,7 @@ const authenticateToken = async (req, res, next) => {
     }
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        const user = await dbGet('SELECT id, username, email, avatar_url, role, is_suspended, suspension_reason, suspension_until, allowed_models, rate_limit_messages, rate_limit_tokens, can_manage_models, rate_limits_per_model FROM users WHERE id = ?', [decoded.id]);
+        const user = await dbGet('SELECT id, username, email, avatar_url, role, is_suspended, suspension_reason, suspension_until, allowed_models, rate_limit_messages, rate_limit_tokens, can_manage_models, rate_limits_per_model, setup_completed FROM users WHERE id = ?', [decoded.id]);
         if (!user) {
             console.log(`User ID ${decoded.id} not found in database`);
             return res.status(401).json({ error: 'User not found.' });
@@ -257,7 +260,7 @@ app.post('/api/auth/register', async (req, res) => {
             path: '/',
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
-        res.status(201).json({ token, id: result.lastID, username: username.trim(), email: email.trim().toLowerCase(), role });
+        res.status(201).json({ token, id: result.lastID, username: username.trim(), email: email.trim().toLowerCase(), role, setup_completed: 0 });
     } catch (err) {
         if (err.message && err.message.includes('UNIQUE constraint failed')) {
             return res.status(400).json({ error: 'Username or email already exists' });
@@ -331,7 +334,7 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
             path: '/',
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
-        res.json({ token, id: user.id, username: user.username, email: user.email, avatar_url: user.avatar_url, role: user.role });
+        res.json({ token, id: user.id, username: user.username, email: user.email, avatar_url: user.avatar_url, role: user.role, setup_completed: user.setup_completed || 0 });
     } catch (err) {
         res.status(500).json({ error: 'Server error during registration.' });
     }
@@ -354,6 +357,7 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
 
     res.json({
        ...req.user,
+       setup_completed: req.user.setup_completed || 0,
        hasHackClubApiKey: !!(userHackClubKey || process.env.HACKCLUB_API_KEY || HACKCLUB_API_KEY)
     });
 });
@@ -471,7 +475,7 @@ app.get('/api/admin/users', authenticateToken, async (req, res) => {
         return res.status(403).json({ error: 'Access denied. Administrator privileges are required.' });
     }
     try {
-        const users = await dbAll('SELECT id, username, email, avatar_url, role, is_suspended, suspension_reason, suspension_until, allowed_models, rate_limit_messages, rate_limit_tokens, can_manage_models, rate_limits_per_model FROM users ORDER BY created_at ASC');
+        const users = await dbAll('SELECT id, username, email, avatar_url, role, is_suspended, suspension_reason, suspension_until, allowed_models, rate_limit_messages, rate_limit_tokens, can_manage_models, rate_limits_per_model, setup_completed FROM users ORDER BY created_at ASC');
         res.json(users);
     } catch (err) {
         res.status(500).json({ error: 'Error loading.' });
@@ -720,9 +724,9 @@ app.post('/api/admin/users/:id/suspend', authenticateToken, async (req, res) => 
             return res.status(403).json({ error: 'Cannot suspend an Administrator account.' });
         }
 
-        const suspendedVal = is_suspended ? 1 : 0;
-        const untilVal = is_suspended && suspension_until ? suspension_until : null;
-        const reasonVal = is_suspended ? (suspension_reason || 'Administrative suspension') : null;
+        const suspendedVal = is_suspended !== undefined ? (is_suspended ? 1 : 0) : (target.is_suspended ? 0 : 1);
+        const untilVal = suspendedVal && suspension_until ? suspension_until : null;
+        const reasonVal = suspendedVal ? (suspension_reason || 'Administrative suspension') : null;
 
         await dbRun(`
             UPDATE users 
@@ -730,10 +734,80 @@ app.post('/api/admin/users/:id/suspend', authenticateToken, async (req, res) => 
             WHERE id = ?
         `, [suspendedVal, reasonVal, untilVal, targetId]);
 
-        res.json({ success: true });
+        res.json({ success: true, is_suspended: !!suspendedVal });
     } catch (err) {
         res.status(500).json({ error: 'Error changing suspension status.' });
     }
+});
+
+// Complete first-time admin setup
+app.post('/api/admin/complete-setup', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Access denied. Administrator privileges required.' });
+    }
+    try {
+        await dbRun('UPDATE users SET setup_completed = 1 WHERE id = ?', [req.user.id]);
+        res.json({ success: true, message: 'Setup marked as completed.' });
+    } catch (err) {
+        res.status(500).json({ error: 'Error saving setup status.' });
+    }
+});
+
+// System Ollama Detection & Status Check
+app.get('/api/system/ollama-status', authenticateToken, async (req, res) => {
+    let isInstalled = false;
+    let isRunning = false;
+    let modelsCount = 0;
+    let models = [];
+    let version = '';
+
+    // 1. Check if ollama CLI is in PATH
+    try {
+        const { execSync } = require('child_process');
+        const cmd = process.platform === 'win32' ? 'where.exe ollama' : 'which ollama';
+        execSync(cmd, { stdio: 'pipe', timeout: 2000 });
+        isInstalled = true;
+    } catch (e) {}
+
+    // 2. Check if Ollama daemon is reachable on configured URL
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2500);
+        const tagsRes = await fetch(`${OLLAMA}/api/tags`, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        if (tagsRes.ok) {
+            isRunning = true;
+            isInstalled = true;
+            const data = await tagsRes.json();
+            models = data.models || [];
+            modelsCount = models.length;
+        }
+    } catch (e) {
+        isRunning = false;
+    }
+
+    // 3. Fetch version if running
+    if (isRunning) {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 1500);
+            const vRes = await fetch(`${OLLAMA}/api/version`, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            if (vRes.ok) {
+                const vData = await vRes.json();
+                version = vData.version || '';
+            }
+        } catch (e) {}
+    }
+
+    res.json({
+        installed: isInstalled,
+        running: isRunning,
+        modelsCount,
+        models: models.map(m => m.name),
+        version,
+        ollamaUrl: OLLAMA
+    });
 });
 
 app.post('/api/images/generate', authenticateToken, async (req, res) => {
@@ -802,7 +876,10 @@ app.get('/api/models', authenticateToken, async (req, res) => {
     try {
         let models = [];
         try {
-            const response = await fetch(`${OLLAMA}/api/tags`);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 2000);
+            const response = await fetch(`${OLLAMA}/api/tags`, { signal: controller.signal });
+            clearTimeout(timeoutId);
             if (response.ok) {
                 const data = await response.json();
                 models = data.models || [];
@@ -813,13 +890,23 @@ app.get('/api/models', authenticateToken, async (req, res) => {
 
         const includeHackClub = req.query.hackclub === 'true';
         if (includeHackClub) {
-            const hackClubModels = await getHackClubModels();
-            const mapped = hackClubModels.map(m => ({
-                name: m.name,
-                is_hackclub: true,
-                displayName: m.displayName
-            }));
-            models = [...models, ...mapped];
+            let userHackClubKey = null;
+            if (req.user && req.user.id) {
+                try {
+                    const userRow = await dbGet('SELECT hackclub_api_key FROM users WHERE id = ?', [req.user.id]);
+                    userHackClubKey = userRow && userRow.hackclub_api_key;
+                } catch (e) {}
+            }
+            const hasKey = !!(userHackClubKey || process.env.HACKCLUB_API_KEY || HACKCLUB_API_KEY || req.headers['x-hackclub-key']);
+            if (hasKey) {
+                const hackClubModels = await getHackClubModels();
+                const mapped = hackClubModels.map(m => ({
+                    name: m.name,
+                    is_hackclub: true,
+                    displayName: m.displayName
+                }));
+                models = [...models, ...mapped];
+            }
         }
 
         // Apply restrictions filter if currentUser allowed_models whitelist is set
@@ -1284,8 +1371,12 @@ app.post('/api/chat', authenticateToken, async (req, res) => {
     const { model_name, message_content, web_search_enabled, memory_enabled, system_instruction } = req.body;
     let conversation_id = req.body.conversation_id;
 
-    if (!model_name || !message_content) {
-        return res.status(400).json({ error: 'model_name and message_content are required.' });
+    if (!message_content) {
+        return res.status(400).json({ error: 'message_content is required.' });
+    }
+
+    if (!model_name) {
+        return res.status(400).json({ error: 'No AI model selected. No API keys are setup or Ollama is not running.' });
     }
 
     if (req.user.role !== 'admin' && req.user.allowed_models) {
@@ -1370,6 +1461,11 @@ app.post('/api/chat', authenticateToken, async (req, res) => {
     res.setHeader('Connection', 'keep-alive');
 
     try {
+        if (!model_name) {
+            res.write(`data: ${JSON.stringify({ error: 'No AI model selected. No API keys are setup or Ollama is not running.' })}\n\n`);
+            return res.end();
+        }
+
         if (!conversation_id) {
             const title = message_content.substring(0, 30) + (message_content.length > 30 ? '...' : '');
             const result = await dbRun(
@@ -1448,7 +1544,7 @@ IMPORTANT: Do NOT plainly output or announce your metadata, model details, or us
             }
 
             if (!hackclubApiKey) {
-                res.write(`data: ${JSON.stringify({ error: 'Falta la API Key de Hack Club. Por favor configúrala en Configuración.' })}\n\n`);
+                res.write(`data: ${JSON.stringify({ error: 'Hack Club AI API key is missing. No API keys are setup or Ollama is not running.' })}\n\n`);
                 return res.end();
             }
 
@@ -1541,19 +1637,26 @@ IMPORTANT: Do NOT plainly output or announce your metadata, model details, or us
         }
 
         const startTime = Date.now();
-        const ollamaRes = await fetch(`${OLLAMA}/api/chat`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: model_name,
-                messages: messagesPayload,
-                stream: true
-            })
-        });
+        let ollamaRes;
+        try {
+            ollamaRes = await fetch(`${OLLAMA}/api/chat`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: model_name,
+                    messages: messagesPayload,
+                    stream: true
+                })
+            });
+        } catch (fetchErr) {
+            console.error('Ollama connection failure:', fetchErr.message);
+            res.write(`data: ${JSON.stringify({ error: 'Ollama is not running or unreachable. No API keys are setup or Ollama is not running.' })}\n\n`);
+            return res.end();
+        }
 
         if (!ollamaRes.ok) {
             const errText = await ollamaRes.text();
-            res.write(`data: ${JSON.stringify({ error: errText })}\n\n`);
+            res.write(`data: ${JSON.stringify({ error: errText || 'Ollama returned an error.' })}\n\n`);
             return res.end();
         }
 

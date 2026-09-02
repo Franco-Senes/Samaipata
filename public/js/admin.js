@@ -1,10 +1,11 @@
-// public/js/admin.js - Manus AI Admin Management
+// public/js/admin.js - Samaipata Admin Management & First-time Setup
 
 let adminUsersList = [];
 let activeEditUserId = null;
 
 export function initAdmin() {
   bindAdminEvents();
+  bindWelcomeModalEvents();
 }
 
 export function checkAdminAccess(user) {
@@ -71,6 +72,7 @@ function bindAdminEvents() {
       if (target === 'users') loadAdminUsers();
       if (target === 'analytics') loadAdminAnalytics();
       if (target === 'evaluations') loadAdminEvaluations();
+      if (target === 'setup') loadAdminSetup();
     });
   });
 
@@ -91,6 +93,17 @@ function bindAdminEvents() {
   const btnCancelUser = document.getElementById('btn-admin-cancel-user');
   if (btnCancelUser) {
     btnCancelUser.addEventListener('click', hideAdminUserDrawer);
+  }
+
+  // Admin Setup Tab actions
+  const btnSaveHackClub = document.getElementById('btn-admin-save-hackclub');
+  if (btnSaveHackClub) {
+    btnSaveHackClub.addEventListener('click', saveAdminHackClubKey);
+  }
+
+  const btnRefreshOllama = document.getElementById('btn-admin-refresh-ollama');
+  if (btnRefreshOllama) {
+    btnRefreshOllama.addEventListener('click', checkAdminOllamaStatus);
   }
 }
 
@@ -120,17 +133,17 @@ export function closeAdminModal() {
 export async function loadAdminUsers() {
   const tbody = document.getElementById('admin-users-tbody');
   if (tbody) {
-    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-zinc-500 text-xs"><span class="inline-block animate-spin mr-1">◌</span> Cargando usuarios...</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-zinc-500 text-xs"><span class="inline-block animate-spin mr-1">◌</span> Loading users...</td></tr>`;
   }
 
   try {
     const res = await fetch('/api/admin/users');
-    if (!res.ok) throw new Error('No autorizado o error del servidor');
+    if (!res.ok) throw new Error('Unauthorized or server error');
     adminUsersList = await res.json();
     renderAdminUsersTable();
   } catch (err) {
     if (tbody) {
-      tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-red-400 text-xs">Error: ${err.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-red-400 text-xs">Error: ${escapeHtml(err.message)}</td></tr>`;
     }
   }
 }
@@ -150,7 +163,7 @@ function renderAdminUsersTable() {
   }
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-zinc-500 text-xs">No se encontraron usuarios registrados.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-zinc-500 text-xs">No registered users found.</td></tr>`;
     return;
   }
 
@@ -158,11 +171,11 @@ function renderAdminUsersTable() {
     const isSuspended = !!u.is_suspended;
     const roleBadge = u.role === 'admin' 
       ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white text-zinc-950">Admin</span>`
-      : `<span class="px-2 py-0.5 rounded-full text-[10px] bg-zinc-800 border border-zinc-700 text-zinc-300">Usuario</span>`;
+      : `<span class="px-2 py-0.5 rounded-full text-[10px] bg-zinc-800 border border-zinc-700 text-zinc-300">User</span>`;
     
     const statusBadge = isSuspended
-      ? `<span class="px-2 py-0.5 rounded-full text-[10px] bg-red-500/10 text-red-400 border border-red-500/30">Suspendido</span>`
-      : `<span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">Activo</span>`;
+      ? `<span class="px-2 py-0.5 rounded-full text-[10px] bg-red-500/10 text-red-400 border border-red-500/30">Suspended</span>`
+      : `<span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">Active</span>`;
 
     const initials = (u.username || 'U').slice(0, 2).toUpperCase();
 
@@ -183,10 +196,10 @@ function renderAdminUsersTable() {
         <td class="py-3 px-3">${roleBadge}</td>
         <td class="py-3 px-3">${statusBadge}</td>
         <td class="py-3 px-3 text-right space-x-1.5">
-          <button class="btn-edit-user p-1.5 rounded-lg bg-[#282828] hover:bg-[#323232] text-zinc-300 hover:text-white transition-colors" data-id="${u.id}" title="Editar permisos">
+          <button class="btn-edit-user p-1.5 rounded-lg bg-[#282828] hover:bg-[#323232] text-zinc-300 hover:text-white transition-colors" data-id="${u.id}" title="Edit permissions">
             <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
           </button>
-          <button class="btn-toggle-suspend p-1.5 rounded-lg ${isSuspended ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/15 text-red-400'} hover:opacity-80 transition-colors" data-id="${u.id}" title="${isSuspended ? 'Reactivar' : 'Suspender'}">
+          <button class="btn-toggle-suspend p-1.5 rounded-lg ${isSuspended ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/15 text-red-400'} hover:opacity-80 transition-colors" data-id="${u.id}" title="${isSuspended ? 'Reactivate' : 'Suspend'}">
             <i data-lucide="${isSuspended ? 'user-check' : 'user-x'}" class="w-3.5 h-3.5"></i>
           </button>
         </td>
@@ -208,13 +221,17 @@ function renderAdminUsersTable() {
     btn.addEventListener('click', async () => {
       const id = parseInt(btn.getAttribute('data-id'), 10);
       const user = adminUsersList.find(u => u.id === id);
-      const action = user && user.is_suspended ? 'reactivar' : 'suspender';
-      if (confirm(`¿Estás seguro de que deseas ${action} la cuenta de ${user?.username}?`)) {
+      const action = user && user.is_suspended ? 'reactivate' : 'suspend';
+      if (confirm(`Are you sure you want to ${action} the account of ${user?.username}?`)) {
         try {
-          const res = await fetch(`/api/admin/users/${id}/suspend`, { method: 'POST' });
+          const res = await fetch(`/api/admin/users/${id}/suspend`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ is_suspended: !user.is_suspended })
+          });
           if (!res.ok) {
             const err = await res.json();
-            throw new Error(err.error || 'Error al modificar usuario');
+            throw new Error(err.error || 'Error modifying user');
           }
           loadAdminUsers();
         } catch (e) {
@@ -233,7 +250,7 @@ function showAdminUserDrawer(userId) {
   const drawer = document.getElementById('admin-user-drawer');
   if (!drawer) return;
 
-  document.getElementById('admin-edit-title').textContent = `Editar Usuario: ${user.username}`;
+  document.getElementById('admin-edit-title').textContent = `Edit User: ${user.username}`;
   document.getElementById('admin-edit-role').value = user.role || 'user';
   document.getElementById('admin-edit-limit-msgs').value = user.rate_limit_messages || '';
   document.getElementById('admin-edit-limit-tokens').value = user.rate_limit_tokens || '';
@@ -270,7 +287,7 @@ async function saveAdminUser() {
 
     if (!res.ok) {
       const err = await res.json();
-      throw new Error(err.error || 'Error al guardar cambios');
+      throw new Error(err.error || 'Error saving changes');
     }
 
     hideAdminUserDrawer();
@@ -287,13 +304,13 @@ export async function loadAdminAnalytics() {
 
   try {
     const res = await fetch('/api/admin/analytics');
-    if (!res.ok) throw new Error('No autorizado');
+    if (!res.ok) throw new Error('Unauthorized');
     const data = await res.json();
 
-    document.getElementById('stat-total-users').textContent = data.total_users || 0;
-    document.getElementById('stat-active-convs').textContent = data.total_conversations || 0;
-    document.getElementById('stat-total-messages').textContent = data.total_messages || 0;
-    document.getElementById('stat-total-tokens').textContent = (data.total_tokens || 0).toLocaleString();
+    document.getElementById('stat-total-users').textContent = data.stats?.users || data.total_users || 0;
+    document.getElementById('stat-active-convs').textContent = data.stats?.conversations || data.total_conversations || 0;
+    document.getElementById('stat-total-messages').textContent = data.stats?.messages || data.total_messages || 0;
+    document.getElementById('stat-total-tokens').textContent = ((data.stats?.tokens || data.total_tokens) || 0).toLocaleString();
   } catch (err) {
     console.error('Error analytics:', err);
   }
@@ -306,12 +323,12 @@ export async function loadAdminEvaluations() {
 
   try {
     const res = await fetch('/api/admin/evaluations');
-    if (!res.ok) throw new Error('No autorizado');
+    if (!res.ok) throw new Error('Unauthorized');
     const data = await res.json();
     const leaderboard = data.leaderboard || [];
 
     if (leaderboard.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-zinc-500 text-xs">Sin evaluaciones de modelos registradas aún.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-zinc-500 text-xs">No model evaluations recorded yet.</td></tr>`;
       return;
     }
 
@@ -325,8 +342,267 @@ export async function loadAdminEvaluations() {
     `).join('');
   } catch (err) {
     if (tbody) {
-      tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-red-400 text-xs">Error: ${err.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-red-400 text-xs">Error: ${escapeHtml(err.message)}</td></tr>`;
     }
+  }
+}
+
+// 4. Admin Setup & AI Services Tab
+export async function loadAdminSetup() {
+  const token = localStorage.getItem('samaipata_hackclub_token') || localStorage.getItem('samaipata_hackclub_api_key') || '';
+  const inputEl = document.getElementById('admin-hackclub-token-input');
+  if (inputEl) inputEl.value = token;
+
+  updateHackClubBadge(!!token);
+  await checkAdminOllamaStatus();
+}
+
+function updateHackClubBadge(hasKey) {
+  const badge = document.getElementById('admin-hackclub-status-badge');
+  if (!badge) return;
+
+  if (hasKey) {
+    badge.className = 'px-2.5 py-1 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
+    badge.textContent = 'Configured';
+  } else {
+    badge.className = 'px-2.5 py-1 rounded-full text-[10px] font-medium bg-zinc-800 text-zinc-400 border border-zinc-700';
+    badge.textContent = 'Not Configured';
+  }
+}
+
+async function saveAdminHackClubKey() {
+  const inputEl = document.getElementById('admin-hackclub-token-input');
+  const token = inputEl ? inputEl.value.trim() : '';
+
+  localStorage.setItem('samaipata_hackclub_token', token);
+  localStorage.setItem('samaipata_hackclub_api_key', token);
+
+  try {
+    await fetch('/api/user/hackclub-key', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ apiKey: token })
+    });
+  } catch (e) {}
+
+  updateHackClubBadge(!!token);
+  if (window.loadModels) window.loadModels();
+
+  const btn = document.getElementById('btn-admin-save-hackclub');
+  if (btn) {
+    const originalText = btn.innerHTML;
+    btn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-600"></i><span>Saved!</span>`;
+    setTimeout(() => {
+      btn.innerHTML = originalText;
+      if (window.lucide) window.lucide.createIcons();
+    }, 2000);
+  }
+}
+
+export async function checkAdminOllamaStatus() {
+  const installedEl = document.getElementById('admin-ollama-installed-val');
+  const runningEl = document.getElementById('admin-ollama-running-val');
+  const modelsEl = document.getElementById('admin-ollama-models-val');
+  const listBox = document.getElementById('admin-ollama-models-list-box');
+  const tagsContainer = document.getElementById('admin-ollama-models-tags');
+
+  if (installedEl) installedEl.textContent = 'Checking...';
+  if (runningEl) runningEl.textContent = 'Checking...';
+
+  try {
+    const res = await fetch('/api/system/ollama-status');
+    if (!res.ok) throw new Error('Status request failed');
+    const data = await res.json();
+
+    if (installedEl) {
+      installedEl.textContent = data.installed ? 'Yes (Installed)' : 'Not Found';
+      installedEl.className = `text-xs font-semibold mt-1 ${data.installed ? 'text-emerald-400' : 'text-amber-400'}`;
+    }
+
+    if (runningEl) {
+      runningEl.textContent = data.running ? 'Yes (Online)' : 'No (Offline)';
+      runningEl.className = `text-xs font-semibold mt-1 ${data.running ? 'text-emerald-400' : 'text-red-400'}`;
+    }
+
+    if (modelsEl) {
+      modelsEl.textContent = data.modelsCount || 0;
+      modelsEl.className = `text-xs font-semibold mt-1 ${data.modelsCount > 0 ? 'text-emerald-400' : 'text-zinc-400'}`;
+    }
+
+    if (listBox && tagsContainer) {
+      if (data.models && data.models.length > 0) {
+        tagsContainer.innerHTML = data.models.map(m => `
+          <span class="px-2 py-0.5 bg-[#2A2A2A] border border-[#3A3A3A] rounded-lg text-zinc-300 font-mono text-[11px]">${escapeHtml(m)}</span>
+        `).join('');
+        listBox.classList.remove('hidden');
+      } else {
+        listBox.classList.add('hidden');
+      }
+    }
+  } catch (err) {
+    if (installedEl) installedEl.textContent = 'Error';
+    if (runningEl) runningEl.textContent = 'Error';
+  }
+}
+
+// 5. First-Time Admin Welcome & Setup Modal
+function bindWelcomeModalEvents() {
+  const modal = document.getElementById('admin-welcome-modal');
+  const btnSkip = document.getElementById('btn-welcome-skip');
+  const btnComplete = document.getElementById('btn-welcome-complete');
+  const btnSaveHackClub = document.getElementById('btn-welcome-save-hackclub');
+  const btnRefreshOllama = document.getElementById('btn-welcome-refresh-ollama');
+
+  if (btnSkip) {
+    btnSkip.addEventListener('click', () => {
+      markSetupDone();
+      closeAdminWelcomeModal();
+    });
+  }
+
+  if (btnComplete) {
+    btnComplete.addEventListener('click', async () => {
+      const input = document.getElementById('welcome-hackclub-input');
+      if (input && input.value.trim()) {
+        const val = input.value.trim();
+        localStorage.setItem('samaipata_hackclub_token', val);
+        localStorage.setItem('samaipata_hackclub_api_key', val);
+        try {
+          await fetch('/api/user/hackclub-key', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ apiKey: val })
+          });
+        } catch (e) {}
+      }
+
+      await markSetupDone();
+      if (window.loadModels) window.loadModels();
+      closeAdminWelcomeModal();
+    });
+  }
+
+  if (btnSaveHackClub) {
+    btnSaveHackClub.addEventListener('click', async () => {
+      const input = document.getElementById('welcome-hackclub-input');
+      const val = input ? input.value.trim() : '';
+      localStorage.setItem('samaipata_hackclub_token', val);
+      localStorage.setItem('samaipata_hackclub_api_key', val);
+      try {
+        await fetch('/api/user/hackclub-key', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ apiKey: val })
+        });
+      } catch (e) {}
+
+      const statusEl = document.getElementById('welcome-hackclub-status');
+      if (statusEl) {
+        statusEl.textContent = val ? 'Status: Key saved!' : 'Status: Cleared';
+        statusEl.className = `text-xs ${val ? 'text-emerald-400' : 'text-zinc-400'}`;
+      }
+      if (window.loadModels) window.loadModels();
+    });
+  }
+
+  if (btnRefreshOllama) {
+    btnRefreshOllama.addEventListener('click', checkWelcomeOllamaStatus);
+  }
+
+  // Welcome modal tabs
+  const tabBtns = document.querySelectorAll('.welcome-tab-btn');
+  const panes = document.querySelectorAll('.welcome-tab-pane');
+
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-welcome-tab');
+
+      tabBtns.forEach(b => {
+        b.className = 'welcome-tab-btn flex-1 py-1.5 px-3 rounded-xl text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:bg-[#242424] transition-all';
+      });
+
+      btn.className = 'welcome-tab-btn flex-1 py-1.5 px-3 rounded-xl text-xs font-medium bg-[#2A2A2A] text-zinc-100 border border-zinc-500 shadow-sm transition-all';
+
+      panes.forEach(pane => {
+        if (pane.id === `welcome-tab-${target}`) {
+          pane.classList.remove('hidden');
+        } else {
+          pane.classList.add('hidden');
+        }
+      });
+    });
+  });
+}
+
+export async function openAdminWelcomeModal() {
+  const modal = document.getElementById('admin-welcome-modal');
+  if (!modal) return;
+
+  const token = localStorage.getItem('samaipata_hackclub_token') || localStorage.getItem('samaipata_hackclub_api_key') || '';
+  const input = document.getElementById('welcome-hackclub-input');
+  if (input) input.value = token;
+
+  const statusEl = document.getElementById('welcome-hackclub-status');
+  if (statusEl) {
+    statusEl.textContent = token ? 'Status: Key saved' : 'Status: Not configured';
+    statusEl.className = `text-xs ${token ? 'text-emerald-400' : 'text-zinc-400'}`;
+  }
+
+  modal.classList.remove('hidden');
+  void modal.offsetWidth;
+  modal.classList.add('active');
+
+  await checkWelcomeOllamaStatus();
+  if (window.lucide) window.lucide.createIcons();
+}
+
+export function closeAdminWelcomeModal() {
+  const modal = document.getElementById('admin-welcome-modal');
+  if (!modal) return;
+
+  modal.classList.remove('active');
+  setTimeout(() => {
+    modal.classList.add('hidden');
+  }, 200);
+}
+
+async function markSetupDone() {
+  localStorage.setItem('samaipata_admin_setup_done', 'true');
+  try {
+    await fetch('/api/admin/complete-setup', { method: 'POST' });
+  } catch (e) {}
+}
+
+async function checkWelcomeOllamaStatus() {
+  const installedBadge = document.getElementById('welcome-ollama-installed-badge');
+  const runningBadge = document.getElementById('welcome-ollama-running-badge');
+  const modelsCount = document.getElementById('welcome-ollama-models-count');
+
+  if (installedBadge) installedBadge.textContent = 'Checking...';
+  if (runningBadge) runningBadge.textContent = 'Checking...';
+
+  try {
+    const res = await fetch('/api/system/ollama-status');
+    if (!res.ok) throw new Error('Failed');
+    const data = await res.json();
+
+    if (installedBadge) {
+      installedBadge.textContent = data.installed ? 'Yes' : 'Not found in PATH';
+      installedBadge.className = `font-medium ${data.installed ? 'text-emerald-400' : 'text-amber-400'}`;
+    }
+
+    if (runningBadge) {
+      runningBadge.textContent = data.running ? 'Running' : 'Offline';
+      runningBadge.className = `font-medium ${data.running ? 'text-emerald-400' : 'text-red-400'}`;
+    }
+
+    if (modelsCount) {
+      modelsCount.textContent = `${data.modelsCount || 0} local model(s)`;
+      modelsCount.className = `font-medium ${(data.modelsCount || 0) > 0 ? 'text-emerald-400' : 'text-zinc-400'}`;
+    }
+  } catch (err) {
+    if (installedBadge) installedBadge.textContent = 'Unknown';
+    if (runningBadge) runningBadge.textContent = 'Offline';
   }
 }
 
