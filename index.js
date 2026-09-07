@@ -1717,6 +1717,10 @@ app.get('api/memories', authenticateToken, async (req, res) => {
 });
 
 
+app.get('/testsamaipata', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'testsamaipata.html'));
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('*', (req, res) => {
