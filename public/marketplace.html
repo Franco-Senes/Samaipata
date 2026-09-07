@@ -178,6 +178,21 @@
        2. MAIN MARKETPLACE CONTENT
        =============================== -->
   <main class="flex-1 flex flex-col h-screen overflow-hidden bg-[#181818]">
+
+    <!-- Web Demo Preview Warning Banner -->
+    <div id="web-demo-notice" class="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 flex items-center justify-between text-xs text-amber-200/90 shrink-0 z-30">
+      <div class="flex items-center gap-2.5 mx-auto max-w-4xl w-full">
+        <i data-lucide="alert-circle" class="w-4 h-4 text-amber-400 shrink-0"></i>
+        <div class="flex-1 leading-snug">
+          <strong class="font-semibold text-amber-300">Web Demo Preview:</strong>
+          This hosted online version is for evaluation purposes and does not support local offline models (like Ollama). Please select and test using the cloud & Hack Club AI models.
+        </div>
+        <button onclick="document.getElementById('web-demo-notice').remove()" class="p-1 hover:bg-amber-500/20 rounded text-amber-300 transition-colors ml-2" title="Dismiss">
+          <i data-lucide="x" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+    </div>
+
     <!-- Top Bar -->
     <header class="h-14 px-6 border-b border-[#262626] flex items-center justify-between gap-4 bg-[#181818] shrink-0 z-10">
       <div class="flex items-center gap-3">
