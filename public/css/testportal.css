@@ -1,0 +1,298 @@
+/* Samaipata Test Portal Styling
+   Clean, handwritten styles for the environment selector */
+
+:root {
+  --bg-color: #121212;
+  --card-bg: #1c1c1c;
+  --card-border: #2c2c2c;
+  --text-main: #f0f0f0;
+  --text-muted: #888888;
+  --gold: #d4a373;
+  --blue: #38bdf8;
+  --green: #4ade80;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+}
+
+.portal-container {
+  max-width: 960px;
+  width: 100%;
+  margin: auto;
+  text-align: center;
+}
+
+/* Brand Logo */
+.portal-logo {
+  width: 56px;
+  height: 56px;
+  background-color: #222222;
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  color: var(--gold);
+  font-size: 24px;
+}
+
+/* Typography */
+.portal-title {
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-size: 2.2rem;
+  font-weight: 400;
+  color: #ffffff;
+  margin-bottom: 12px;
+}
+
+.portal-title span {
+  color: var(--gold);
+}
+
+.portal-subtitle {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  max-width: 620px;
+  margin: 0 auto 36px auto;
+}
+
+/* 2-Column Cards Grid */
+.cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  text-align: left;
+  margin-bottom: 28px;
+}
+
+@media (max-width: 768px) {
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Option Card */
+.option-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.option-card:hover {
+  transform: translateY(-3px);
+  border-color: #444444;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-icon.gold {
+  background: rgba(212, 163, 115, 0.12);
+  color: var(--gold);
+}
+
+.card-icon.blue {
+  background: rgba(56, 189, 248, 0.12);
+  color: var(--blue);
+}
+
+.card-tag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.card-tag.gold {
+  background: rgba(212, 163, 115, 0.12);
+  color: var(--gold);
+  border: 1px solid rgba(212, 163, 115, 0.25);
+}
+
+.card-tag.blue {
+  background: rgba(56, 189, 248, 0.12);
+  color: var(--blue);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+.card-title {
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #ffffff;
+}
+
+.card-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+/* Feature checklist */
+.feature-list {
+  list-style: none;
+  margin-bottom: 24px;
+}
+
+.feature-list li {
+  font-size: 0.82rem;
+  color: #cccccc;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.feature-list li svg,
+.feature-list li i {
+  color: var(--green);
+  flex-shrink: 0;
+}
+
+.feature-list li.note {
+  color: var(--text-muted);
+  margin-top: 14px;
+}
+
+.feature-list li.note svg,
+.feature-list li.note i {
+  color: var(--gold);
+}
+
+/* Buttons */
+.btn-row {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+  cursor: pointer;
+}
+
+.btn-white {
+  background-color: #ffffff;
+  color: #121212;
+  width: 100%;
+}
+
+.btn-white:hover {
+  background-color: #e5e5e5;
+}
+
+.btn-dark {
+  background-color: #262626;
+  color: #ffffff;
+  border: 1px solid #383838;
+  flex: 1;
+}
+
+.btn-dark:hover {
+  background-color: #303030;
+  border-color: var(--blue);
+}
+
+.btn-icon-only {
+  background-color: #222222;
+  color: var(--text-muted);
+  border: 1px solid var(--card-border);
+  padding: 12px 14px;
+}
+
+.btn-icon-only:hover {
+  color: #ffffff;
+  background-color: #282828;
+}
+
+/* Reviewer Info Banner */
+.reviewer-card {
+  background-color: #181818;
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  text-align: left;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.reviewer-card-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.reviewer-card-content i,
+.reviewer-card-content svg {
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.reviewer-link {
+  color: var(--gold);
+  text-decoration: none;
+  font-weight: 500;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.reviewer-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+  .reviewer-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

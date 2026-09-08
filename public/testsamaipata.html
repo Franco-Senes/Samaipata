@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,159 +7,121 @@
   <link rel="icon" type="image/svg+xml" href="Icon.ico" />
   <link rel="alternate icon" href="Icon.ico" />
 
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet" />
 
   <!-- Font Awesome & Lucide Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <script src="https://unpkg.com/lucide@latest"></script>
 
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['"DM Sans"', 'sans-serif'],
-            serif: ['"Libre Baskerville"', 'Georgia', 'serif'],
-          }
-        }
-      }
-    };
-  </script>
+  <!-- Clean Handwritten CSS -->
+  <link rel="stylesheet" href="css/testportal.css" />
 </head>
-<body class="bg-[#141414] text-[#ECECEC] min-h-screen flex flex-col justify-center items-center selection:bg-zinc-700 selection:text-white font-sans antialiased p-6">
+<body>
 
-  <!-- Background decorative glows -->
-  <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-    <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-amber-500/5 rounded-full blur-3xl"></div>
-    <div class="absolute top-1/3 -left-40 w-[500px] h-[500px] bg-sky-500/5 rounded-full blur-3xl"></div>
-    <div class="absolute bottom-10 -right-40 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-3xl"></div>
-  </div>
-
-  <!-- Main Hero & Selectors -->
-  <main class="relative z-10 max-w-5xl w-full mx-auto flex flex-col items-center justify-center text-center my-auto py-6">
+  <main class="portal-container">
     
-    <!-- Samaipata Logo Icon -->
-    <div class="w-14 h-14 rounded-2xl bg-[#212121] border border-[#2E2E2E] flex items-center justify-center mb-6 shadow-xl">
-      <i class="fa-solid fa-archway text-2xl text-amber-400"></i>
+    <!-- Brand Logo -->
+    <div class="portal-logo">
+      <i class="fa-solid fa-archway"></i>
     </div>
 
-    <!-- Title -->
-    <h1 class="font-serif text-3xl sm:text-5xl font-normal text-white mb-4 tracking-tight max-w-3xl leading-tight">
-      How would you like to experience <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-white to-amber-100">Samaipata</span>?
+    <!-- Title & Subtitle -->
+    <h1 class="portal-title">
+      How would you like to experience <span>Samaipata</span>?
     </h1>
-    
-    <p class="text-zinc-400 text-sm sm:text-base max-w-2xl mb-10 font-sans leading-relaxed">
+    <p class="portal-subtitle">
       Samaipata is a full-stack, local-first AI client designed for privacy and speed. Choose to test the hosted web demo online or download the full offline desktop release.
     </p>
 
     <!-- Two Main Choice Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full text-left">
+    <div class="cards-grid">
       
       <!-- Card 1: Web Preview (Instant Cloud Version) -->
-      <div class="relative group bg-[#1C1C1C] border border-[#2D2D2D] hover:border-amber-500/50 rounded-3xl p-7 flex flex-col justify-between shadow-2xl transition-all duration-300 hover:shadow-amber-500/5 hover:-translate-y-1">
+      <div class="option-card">
         <div>
-          <!-- Top Card Row -->
-          <div class="flex items-center justify-between mb-5">
-            <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-              <i data-lucide="globe" class="w-6 h-6"></i>
+          <div class="card-header">
+            <div class="card-icon gold">
+              <i data-lucide="globe" style="width: 22px; height: 22px;"></i>
             </div>
-            <span class="px-3 py-1 rounded-full text-[11px] font-semibold bg-amber-500/10 border border-amber-500/30 text-amber-300">
-              Instant Cloud Demo
-            </span>
+            <span class="card-tag gold">Instant Cloud Demo</span>
           </div>
 
-          <h2 class="font-serif text-2xl font-semibold text-white mb-2 group-hover:text-amber-300 transition-colors">
-            Web Preview Version
-          </h2>
-          <p class="text-xs text-zinc-400 mb-6 leading-relaxed">
+          <h2 class="card-title">Web Preview Version</h2>
+          <p class="card-desc">
             Test the interface, real-time token streaming, conversations, search, and user settings immediately in your browser without installing anything locally.
           </p>
 
-          <!-- Feature List -->
-          <ul class="space-y-3 mb-8 text-xs text-zinc-300">
-            <li class="flex items-center gap-2.5">
-              <i data-lucide="check" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+          <ul class="feature-list">
+            <li>
+              <i data-lucide="check" style="width: 16px; height: 16px;"></i>
               <span>Zero installation — runs in any modern browser</span>
             </li>
-            <li class="flex items-center gap-2.5">
-              <i data-lucide="check" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+            <li>
+              <i data-lucide="check" style="width: 16px; height: 16px;"></i>
               <span>Pre-configured with Hack Club AI & cloud LLMs</span>
             </li>
-            <li class="flex items-center gap-2.5">
-              <i data-lucide="check" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+            <li>
+              <i data-lucide="check" style="width: 16px; height: 16px;"></i>
               <span>SSE streaming with live reasoning visualization</span>
             </li>
-            <li class="flex items-center gap-2.5 text-zinc-500">
-              <i data-lucide="info" class="w-4 h-4 text-amber-400/80 shrink-0"></i>
+            <li class="note">
+              <i data-lucide="info" style="width: 16px; height: 16px;"></i>
               <span>Note: Local offline Ollama models are disabled in web mode</span>
             </li>
           </ul>
         </div>
 
-        <!-- Action Button -->
-        <a href="/" class="w-full py-3.5 px-4 rounded-2xl bg-white hover:bg-zinc-200 text-zinc-950 font-medium text-sm flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98]">
+        <a href="/" class="btn btn-white">
           <span>Launch Web Version</span>
-          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          <i data-lucide="arrow-right" style="width: 16px; height: 16px;"></i>
         </a>
       </div>
 
-      <!-- Card 2: Local Full Release (Ollama Native) -->
-      <div class="relative group bg-[#1C1C1C] border border-[#2D2D2D] hover:border-sky-500/50 rounded-3xl p-7 flex flex-col justify-between shadow-2xl transition-all duration-300 hover:shadow-sky-500/5 hover:-translate-y-1">
+      <!-- Card 2: Local Desktop Version (Ollama Native) -->
+      <div class="option-card">
         <div>
-          <!-- Top Card Row -->
-          <div class="flex items-center justify-between mb-5">
-            <div class="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
-              <i data-lucide="hard-drive-download" class="w-6 h-6"></i>
+          <div class="card-header">
+            <div class="card-icon blue">
+              <i data-lucide="hard-drive-download" style="width: 22px; height: 22px;"></i>
             </div>
-            <span class="px-3 py-1 rounded-full text-[11px] font-semibold bg-sky-500/10 border border-sky-500/30 text-sky-300">
-              Full Native Release
-            </span>
+            <span class="card-tag blue">Full Native Release</span>
           </div>
 
-          <h2 class="font-serif text-2xl font-semibold text-white mb-2 group-hover:text-sky-300 transition-colors">
-            Local Desktop Version
-          </h2>
-          <p class="text-xs text-zinc-400 mb-6 leading-relaxed">
+          <h2 class="card-title">Local Desktop Version</h2>
+          <p class="card-desc">
             The complete native Samaipata experience with offline Ollama model inference, automated desktop installer, and zero-latency private intelligence.
           </p>
 
-          <!-- Feature List -->
-          <ul class="space-y-3 mb-8 text-xs text-zinc-300">
-            <li class="flex items-center gap-2.5">
-              <i data-lucide="check" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+          <ul class="feature-list">
+            <li>
+              <i data-lucide="check" style="width: 16px; height: 16px;"></i>
               <span>100% offline & private local models via Ollama</span>
             </li>
-            <li class="flex items-center gap-2.5">
-              <i data-lucide="check" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+            <li>
+              <i data-lucide="check" style="width: 16px; height: 16px;"></i>
               <span>Custom Model Marketplace with local download engine</span>
             </li>
-            <li class="flex items-center gap-2.5">
-              <i data-lucide="check" class="w-4 h-4 text-emerald-400 shrink-0"></i>
-              <span>Dual-engine: Seamlessly switch between Ollama and Hack Club AI</span>
+            <li>
+              <i data-lucide="check" style="width: 16px; height: 16px;"></i>
+              <span>Dual-engine: Switch between Ollama and Hack Club AI</span>
             </li>
-            <li class="flex items-center gap-2.5">
-              <i data-lucide="check" class="w-4 h-4 text-emerald-400 shrink-0"></i>
-              <span>One-click Windows installer (EXE) and cross-platform setup</span>
+            <li>
+              <i data-lucide="check" style="width: 16px; height: 16px;"></i>
+              <span>One-click Windows installer (EXE) and setup scripts</span>
             </li>
           </ul>
         </div>
 
-        <!-- Action Button -->
-        <div class="flex flex-col sm:flex-row gap-2.5">
-          <a href="https://github.com/Franco-Senes/Samaipata/releases/tag/%23Samaipata" target="_blank" rel="noopener noreferrer" class="flex-1 py-3.5 px-4 rounded-2xl bg-[#282828] hover:bg-[#323232] border border-[#3C3C3C] hover:border-sky-500/50 text-white font-medium text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
-            <i data-lucide="download" class="w-4 h-4 text-sky-400"></i>
+        <div class="btn-row">
+          <a href="https://github.com/Franco-Senes/Samaipata/releases/tag/%23Samaipata" target="_blank" rel="noopener noreferrer" class="btn btn-dark">
+            <i data-lucide="download" style="width: 16px; height: 16px;"></i>
             <span>Get Local Release</span>
           </a>
-          <a href="https://github.com/Franco-Senes/Samaipata" target="_blank" rel="noopener noreferrer" class="py-3.5 px-4 rounded-2xl bg-[#212121] hover:bg-[#282828] border border-[#2E2E2E] text-zinc-300 hover:text-white text-sm flex items-center justify-center gap-1.5 transition-all" title="View Source Code">
-            <i data-lucide="code-2" class="w-4 h-4"></i>
-            <span class="sm:hidden">GitHub</span>
+          <a href="https://github.com/Franco-Senes/Samaipata" target="_blank" rel="noopener noreferrer" class="btn btn-icon-only" title="View Source Code on GitHub">
+            <i data-lucide="code-2" style="width: 16px; height: 16px;"></i>
           </a>
         </div>
       </div>
@@ -167,16 +129,16 @@
     </div>
 
     <!-- Reviewer Info Callout Banner -->
-    <div class="mt-8 w-full p-4 rounded-2xl bg-[#1A1A1A] border border-[#2C2C2C] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-400 text-left">
-      <div class="flex items-center gap-3">
-        <i data-lucide="help-circle" class="w-5 h-5 text-amber-400 shrink-0"></i>
+    <div class="reviewer-card">
+      <div class="reviewer-card-content">
+        <i data-lucide="help-circle" style="width: 20px; height: 20px;"></i>
         <span>
-          <strong>Reviewer Note:</strong> If you are evaluating Samaipata for Hack Club Stardance, you can start with the <strong>Web Preview Version</strong> for a fast walkthrough, and download the <strong>Local Desktop Version</strong> to test full offline Ollama integration.
+          <strong>Reviewer Note:</strong> You can start with the <strong>Web Preview Version</strong> for an instant walkthrough, or download the <strong>Local Desktop Version</strong> to test full offline Ollama integration.
         </span>
       </div>
-      <a href="https://github.com/Franco-Senes/Samaipata/blob/main/README.md" target="_blank" rel="noopener noreferrer" class="shrink-0 text-amber-400 hover:underline font-medium flex items-center gap-1">
+      <a href="https://github.com/Franco-Senes/Samaipata/blob/main/README.md" target="_blank" rel="noopener noreferrer" class="reviewer-link">
         <span>Read Documentation</span>
-        <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
+        <i data-lucide="arrow-up-right" style="width: 14px; height: 14px;"></i>
       </a>
     </div>
 
