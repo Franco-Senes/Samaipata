@@ -1,12 +1,9 @@
-/* Samaipata Test Portal Styling - Clean handwritten CSS */
 :root {
   --bg-color: #121212;
   --card-bg: #1c1c1c;
   --card-border: #2c2c2c;
-  --text-main: #f0f0f0;
+  --text-main: #ffffff;
   --text-muted: #888888;
-  --gold: #d4a373;
-  --blue: #38bdf8;
 }
 
 * {
@@ -42,8 +39,8 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20px;
-  color: var(--gold);
+  margin-bottom: 24px;
+  color: #ffffff;
   font-size: 24px;
 }
 
@@ -52,19 +49,11 @@ body {
   font-size: 2.2rem;
   font-weight: 400;
   color: #ffffff;
-  margin-bottom: 12px;
+  margin-bottom: 36px;
 }
 
 .portal-title span {
-  color: var(--gold);
-}
-
-.portal-subtitle {
-  color: var(--text-muted);
-  font-size: 0.95rem;
-  line-height: 1.6;
-  max-width: 600px;
-  margin: 0 auto 36px auto;
+  color: #ffffff;
 }
 
 .cards-grid {
@@ -88,7 +77,7 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 24px;
+  gap: 28px;
   transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
@@ -150,5 +139,5 @@ body {
 
 .btn-dark:hover {
   background-color: #2c2c2c;
-  border-color: var(--gold);
+  border-color: #555555;
 }

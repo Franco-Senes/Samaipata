@@ -7,39 +7,29 @@
   <link rel="icon" type="image/svg+xml" href="Icon.ico" />
   <link rel="alternate icon" href="Icon.ico" />
 
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet" />
 
-  <!-- Font Awesome & Lucide Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <script src="https://unpkg.com/lucide@latest"></script>
 
-  <!-- Clean Handwritten CSS -->
   <link rel="stylesheet" href="css/testportal.css" />
 </head>
 <body>
 
   <main class="portal-container">
     
-    <!-- Brand Logo -->
     <div class="portal-logo">
       <i class="fa-solid fa-archway"></i>
     </div>
 
-    <!-- Title & Subtitle -->
     <h1 class="portal-title">
       How would you like to experience <span>Samaipata</span>?
     </h1>
-    <p class="portal-subtitle">
-      Samaipata is a full-stack, local-first AI client designed for privacy and speed.
-    </p>
 
-    <!-- Two Main Choice Cards -->
     <div class="cards-grid">
       
-      <!-- Card 1: Web Preview -->
       <div class="option-card">
         <div>
           <h2 class="card-title">Web Version</h2>
@@ -51,12 +41,11 @@
         <div class="btn-list">
           <a href="/" class="btn btn-white">
             <span>Launch Web Version</span>
-            <i data-lucide="arrow-right" style="width: 16px; height: 16px;"></i>
+            <i class="fa-solid fa-arrow-right"></i>
           </a>
         </div>
       </div>
 
-      <!-- Card 2: Local Desktop Version -->
       <div class="option-card">
         <div>
           <h2 class="card-title">Local Desktop Version</h2>
@@ -67,11 +56,11 @@
 
         <div class="btn-list">
           <a href="https://github.com/Franco-Senes/Samaipata/releases/tag/%23Samaipata" target="_blank" rel="noopener noreferrer" class="btn btn-dark">
-            <i data-lucide="download" style="width: 16px; height: 16px;"></i>
+            <i class="fa-solid fa-download"></i>
             <span>Download Release</span>
           </a>
           <a href="https://github.com/Franco-Senes/Samaipata" target="_blank" rel="noopener noreferrer" class="btn btn-dark">
-            <i data-lucide="github" style="width: 16px; height: 16px;"></i>
+            <i class="fa-brands fa-github"></i>
             <span>GitHub Repository</span>
           </a>
         </div>
@@ -81,7 +70,6 @@
 
   </main>
 
-  <!-- Initialize Lucide Icons -->
   <script>
     if (window.lucide) {
       window.lucide.createIcons();
