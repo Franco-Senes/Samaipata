@@ -1,6 +1,4 @@
-/* Samaipata Test Portal Styling
-   Clean, handwritten styles for the environment selector */
-
+/* Samaipata Test Portal Styling - Clean handwritten CSS */
 :root {
   --bg-color: #121212;
   --card-bg: #1c1c1c;
@@ -9,7 +7,6 @@
   --text-muted: #888888;
   --gold: #d4a373;
   --blue: #38bdf8;
-  --green: #4ade80;
 }
 
 * {
@@ -30,13 +27,12 @@ body {
 }
 
 .portal-container {
-  max-width: 960px;
+  max-width: 860px;
   width: 100%;
   margin: auto;
   text-align: center;
 }
 
-/* Brand Logo */
 .portal-logo {
   width: 56px;
   height: 56px;
@@ -51,7 +47,6 @@ body {
   font-size: 24px;
 }
 
-/* Typography */
 .portal-title {
   font-family: 'Libre Baskerville', Georgia, serif;
   font-size: 2.2rem;
@@ -68,26 +63,23 @@ body {
   color: var(--text-muted);
   font-size: 0.95rem;
   line-height: 1.6;
-  max-width: 620px;
+  max-width: 600px;
   margin: 0 auto 36px auto;
 }
 
-/* 2-Column Cards Grid */
 .cards-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
   text-align: left;
-  margin-bottom: 28px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 700px) {
   .cards-grid {
     grid-template-columns: 1fr;
   }
 }
 
-/* Option Card */
 .option-card {
   background-color: var(--card-bg);
   border: 1px solid var(--card-border);
@@ -96,6 +88,7 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  gap: 24px;
   transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
@@ -104,121 +97,45 @@ body {
   border-color: #444444;
 }
 
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 18px;
-}
-
-.card-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.card-icon.gold {
-  background: rgba(212, 163, 115, 0.12);
-  color: var(--gold);
-}
-
-.card-icon.blue {
-  background: rgba(56, 189, 248, 0.12);
-  color: var(--blue);
-}
-
-.card-tag {
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 20px;
-}
-
-.card-tag.gold {
-  background: rgba(212, 163, 115, 0.12);
-  color: var(--gold);
-  border: 1px solid rgba(212, 163, 115, 0.25);
-}
-
-.card-tag.blue {
-  background: rgba(56, 189, 248, 0.12);
-  color: var(--blue);
-  border: 1px solid rgba(56, 189, 248, 0.25);
-}
-
 .card-title {
   font-family: 'Libre Baskerville', Georgia, serif;
-  font-size: 1.35rem;
+  font-size: 1.4rem;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   color: #ffffff;
 }
 
-.card-desc {
+.card-note {
   font-size: 0.85rem;
   color: var(--text-muted);
   line-height: 1.5;
-  margin-bottom: 20px;
 }
 
-/* Feature checklist */
-.feature-list {
-  list-style: none;
-  margin-bottom: 24px;
-}
-
-.feature-list li {
-  font-size: 0.82rem;
-  color: #cccccc;
-  margin-bottom: 10px;
+.btn-list {
   display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.feature-list li svg,
-.feature-list li i {
-  color: var(--green);
-  flex-shrink: 0;
-}
-
-.feature-list li.note {
-  color: var(--text-muted);
-  margin-top: 14px;
-}
-
-.feature-list li.note svg,
-.feature-list li.note i {
-  color: var(--gold);
-}
-
-/* Buttons */
-.btn-row {
-  display: flex;
-  gap: 10px;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
 }
 
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 12px 18px;
+  gap: 10px;
+  padding: 13px 18px;
   border-radius: 12px;
   font-size: 0.9rem;
   font-weight: 500;
   text-decoration: none;
-  transition: background-color 0.15s ease, opacity 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
   cursor: pointer;
+  width: 100%;
 }
 
 .btn-white {
   background-color: #ffffff;
   color: #121212;
-  width: 100%;
 }
 
 .btn-white:hover {
@@ -226,73 +143,12 @@ body {
 }
 
 .btn-dark {
-  background-color: #262626;
+  background-color: #242424;
   color: #ffffff;
-  border: 1px solid #383838;
-  flex: 1;
+  border: 1px solid #363636;
 }
 
 .btn-dark:hover {
-  background-color: #303030;
-  border-color: var(--blue);
-}
-
-.btn-icon-only {
-  background-color: #222222;
-  color: var(--text-muted);
-  border: 1px solid var(--card-border);
-  padding: 12px 14px;
-}
-
-.btn-icon-only:hover {
-  color: #ffffff;
-  background-color: #282828;
-}
-
-/* Reviewer Info Banner */
-.reviewer-card {
-  background-color: #181818;
-  border: 1px solid var(--card-border);
-  border-radius: 14px;
-  padding: 16px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  text-align: left;
-  font-size: 0.82rem;
-  color: var(--text-muted);
-}
-
-.reviewer-card-content {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.reviewer-card-content i,
-.reviewer-card-content svg {
-  color: var(--gold);
-  flex-shrink: 0;
-}
-
-.reviewer-link {
-  color: var(--gold);
-  text-decoration: none;
-  font-weight: 500;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.reviewer-link:hover {
-  text-decoration: underline;
-}
-
-@media (max-width: 600px) {
-  .reviewer-card {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+  background-color: #2c2c2c;
+  border-color: var(--gold);
 }
