@@ -1,11 +1,3 @@
-:root {
-  --bg-color: #121212;
-  --card-bg: #1c1c1c;
-  --card-border: #2c2c2c;
-  --text-main: #ffffff;
-  --text-gray: #888888;
-}
-
 * {
   box-sizing: border-box;
   margin: 0;
@@ -13,8 +5,8 @@
 }
 
 body {
-  background-color: var(--bg-color);
-  color: var(--text-main);
+  background-color: #121212;
+  color: #ffffff;
   font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   min-height: 100vh;
   display: flex;
@@ -34,7 +26,7 @@ body {
   width: 56px;
   height: 56px;
   background-color: #222222;
-  border: 1px solid var(--card-border);
+  border: 1px solid #2c2c2c;
   border-radius: 16px;
   display: inline-flex;
   align-items: center;
@@ -44,16 +36,16 @@ body {
   font-size: 24px;
 }
 
+.portal-logo i {
+  color: #ffffff !important;
+}
+
 .portal-title {
   font-family: 'Libre Baskerville', Georgia, serif;
   font-size: 2.2rem;
   font-weight: 400;
-  color: #ffffff;
+  color: #ffffff !important;
   margin-bottom: 36px;
-}
-
-.portal-title span {
-  color: #ffffff;
 }
 
 .cards-grid {
@@ -70,8 +62,8 @@ body {
 }
 
 .option-card {
-  background-color: var(--card-bg);
-  border: 1px solid var(--card-border);
+  background-color: #1c1c1c;
+  border: 1px solid #2c2c2c;
   border-radius: 20px;
   padding: 28px;
   display: flex;
@@ -91,19 +83,19 @@ body {
   font-size: 1.4rem;
   font-weight: 600;
   margin-bottom: 12px;
-  color: #ffffff;
+  color: #ffffff !important;
 }
 
 .card-note {
-  font-size: 0.85rem;
-  color: var(--text-gray);
+  font-size: 0.88rem;
+  color: #9ca3af !important;
   line-height: 1.5;
 }
 
 .btn-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
 }
 
@@ -124,7 +116,7 @@ body {
 
 .btn-white {
   background-color: #ffffff;
-  color: #121212;
+  color: #121212 !important;
 }
 
 .btn-white:hover {
@@ -133,11 +125,11 @@ body {
 
 .btn-dark {
   background-color: #242424;
-  color: #ffffff;
+  color: #ffffff !important;
   border: 1px solid #363636;
 }
 
 .btn-dark:hover {
   background-color: #2c2c2c;
-  border-color: #555555;
+  border-color: #666666;
 }
