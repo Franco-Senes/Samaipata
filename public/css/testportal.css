@@ -3,7 +3,7 @@
   --card-bg: #1c1c1c;
   --card-border: #2c2c2c;
   --text-main: #ffffff;
-  --text-muted: #888888;
+  --text-gray: #888888;
 }
 
 * {
@@ -96,7 +96,7 @@ body {
 
 .card-note {
   font-size: 0.85rem;
-  color: var(--text-muted);
+  color: var(--text-gray);
   line-height: 1.5;
 }
 
