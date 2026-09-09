@@ -924,19 +924,16 @@ function appendMessageToUI(role, content, customId = null) {
 
   const messageWrapper = document.createElement('div');
   messageWrapper.id = msgId;
-  messageWrapper.className = `flex flex-col ${isUser ? 'items-end' : 'items-start'} my-3.5 w-full`;
+  messageWrapper.className = `flex flex-col ${isUser ? 'items-end' : 'items-start'} w-full`;
+  messageWrapper.style.margin = '10px 0';
 
   const parsedContent = isUser
-    ? `<p class="whitespace-pre-wrap leading-relaxed">${escapeHtml(content)}</p>`
+    ? `<p style="white-space: pre-wrap; margin: 0;">${escapeHtml(content)}</p>`
     : (content ? (window.marked ? window.marked.parse(content) : escapeHtml(content)) : '');
 
   messageWrapper.innerHTML = `
-    <div class="max-w-[88%] sm:max-w-[80%] rounded-3xl p-4 sm:p-5 ${
-      isUser
-        ? 'bg-[#2A2A2A] text-zinc-100 rounded-tr-sm border border-[#333333]'
-        : 'bg-[#212121] border border-[#2E2E2E] text-zinc-200 rounded-tl-sm shadow-sm'
-    }">
-      <div id="content-${msgId}" class="markdown-body text-xs sm:text-sm">
+    <div class="${isUser ? 'message-bubble-user' : 'message-bubble-assistant'}">
+      <div id="content-${msgId}" class="markdown-body">
         ${parsedContent}
       </div>
     </div>
