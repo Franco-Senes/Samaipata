@@ -1,118 +1,56 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap');
 
 :root {
-  --manus-bg: #181818;
-  --manus-card-bg: #212121;
-  --manus-border: #2E2E2E;
-  --manus-text-primary: #ECECEC;
-  --manus-text-secondary: #9E9E9E;
+  --bg-main: #181818;
+  --bg-sidebar: #141414;
+  --bg-card: #212121;
+  --bg-input: #1a1a1a;
+  --border-color: #2e2e2e;
+  --text-main: #ececec;
+  --text-secondary: #9e9e9e;
+  --btn-primary-bg: #ffffff;
+  --btn-primary-text: #121212;
 }
 
 html.dark {
-  --manus-bg: #181818;
-  --manus-card-bg: #212121;
-  --manus-border: #2E2E2E;
-  --manus-text-primary: #EDEDED;
-  --manus-text-secondary: #9E9E9E;
+  --bg-main: #181818;
+  --bg-sidebar: #141414;
+  --bg-card: #212121;
+  --bg-input: #1a1a1a;
+  --border-color: #2e2e2e;
+  --text-main: #ededed;
+  --text-secondary: #9e9e9e;
 }
 
 html:not(.dark) {
-  --manus-bg: #F7F7F6;
-  --manus-card-bg: #FFFFFF;
-  --manus-border: #E0E0DC;
-  --manus-text-primary: #1C1C1A;
-  --manus-text-secondary: #5C5B56;
-}
-
-html:not(.dark) body {
-  background-color: #F7F7F6 !important;
-  color: #1C1C1A !important;
-}
-
-html:not(.dark) aside,
-html:not(.dark) nav {
-  background-color: #EFEFEA !important;
-  border-color: #E0E0DC !important;
-}
-
-html:not(.dark) .bg-\[\#181818\],
-html:not(.dark) .bg-\[\#141414\],
-html:not(.dark) .bg-\[\#161616\],
-html:not(.dark) .bg-\[\#1C1C1C\] {
-  background-color: #F7F7F6 !important;
-}
-
-html:not(.dark) .bg-\[\#212121\],
-html:not(.dark) .bg-\[\#1A1A1A\],
-html:not(.dark) .bg-\[\#222222\],
-html:not(.dark) .bg-\[\#242424\],
-html:not(.dark) .bg-\[\#252525\],
-html:not(.dark) .bg-\[\#282828\],
-html:not(.dark) .bg-\[\#2A2A2A\] {
-  background-color: #FFFFFF !important;
-  border-color: #E0E0DC !important;
-}
-
-html:not(.dark) .border-\[\#2E2E2E\],
-html:not(.dark) .border-\[\#262626\],
-html:not(.dark) .border-\[\#282828\],
-html:not(.dark) .border-\[\#2A2A2A\],
-html:not(.dark) .border-\[\#2C2C2C\],
-html:not(.dark) .border-\[\#333333\] {
-  border-color: #E0E0DC !important;
-}
-
-html:not(.dark) .text-zinc-100,
-html:not(.dark) .text-zinc-200,
-html:not(.dark) .text-\[\#EDEDED\],
-html:not(.dark) .text-\[\#ECECEC\] {
-  color: #1C1C1A !important;
-}
-
-html:not(.dark) .text-zinc-400,
-html:not(.dark) .text-zinc-300 {
-  color: #5C5B56 !important;
-}
-
-html:not(.dark) .text-zinc-500 {
-  color: #8E8D88 !important;
-}
-
-html:not(.dark) input,
-html:not(.dark) textarea,
-html:not(.dark) select {
-  background-color: #FFFFFF !important;
-  color: #1C1C1A !important;
-  border-color: #E0E0DC !important;
-}
-
-/* Primary buttons in light mode */
-html:not(.dark) .bg-white.text-zinc-950,
-html:not(.dark) #btn-new-prompt {
-  background-color: #181818 !important;
-  color: #FFFFFF !important;
-}
-
-html:not(.dark) .bg-white.text-zinc-950:hover,
-html:not(.dark) #btn-new-prompt:hover {
-  background-color: #2D2D2D !important;
+  --bg-main: #f7f7f6;
+  --bg-sidebar: #efefea;
+  --bg-card: #ffffff;
+  --bg-input: #ffffff;
+  --border-color: #e0e0dc;
+  --text-main: #1c1c1a;
+  --text-secondary: #5c5b56;
+  --btn-primary-bg: #181818;
+  --btn-primary-text: #ffffff;
 }
 
 body {
   font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: var(--manus-bg);
-  color: var(--manus-text-primary);
+  background-color: var(--bg-main);
+  color: var(--text-main);
   transition: background-color 0.2s ease, color 0.2s ease;
+  margin: 0;
+  padding: 0;
 }
 
-.font-serif-manus {
+.font-serif-custom {
   font-family: 'Libre Baskerville', Georgia, serif;
 }
 
-/* Custom Scrollbars */
+/* Custom scrollbars */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {

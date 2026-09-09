@@ -8,7 +8,7 @@ Samaipata is a custom, full-stack, local-first AI client interface that works us
   - [Hack Club AI](https://ai.hackclub.com)
   - [Ollama](https://ollama.com/)
 - **2. Clean Modern UI**
-  - Clean interface inspired by Manus AI.
+  - Clean, minimal dark interface designed for fast and focused conversations.
 - **3. Real-time Streaming (SSE)**
   - Full support for real-time token streaming and reasoning visualization.
 - **4. Custom Model Marketplace**
