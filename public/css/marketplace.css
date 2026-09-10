@@ -1,6 +1,6 @@
 /* ==========================================================================
    Samaipata — Marketplace Stylesheet
-   Clean, handcrafted CSS for model catalog and plugins
+   Clean, handcrafted CSS for model catalog, plugins and prompts
    ========================================================================== */
 
 /* 1. Theme Variables & Base */
@@ -16,9 +16,12 @@
   --text-muted: #888888;
   --btn-primary-bg: #ffffff;
   --btn-primary-text: #111111;
+  --btn-secondary-bg: #242424;
+  --btn-secondary-text: #f0f0f0;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 18px;
+  --radius-xl: 24px;
 }
 
 html.dark {
@@ -33,6 +36,8 @@ html.dark {
   --text-muted: #888888;
   --btn-primary-bg: #ffffff;
   --btn-primary-text: #111111;
+  --btn-secondary-bg: #242424;
+  --btn-secondary-text: #f0f0f0;
 }
 
 html:not(.dark) {
@@ -47,6 +52,8 @@ html:not(.dark) {
   --text-muted: #6b6b72;
   --btn-primary-bg: #141416;
   --btn-primary-text: #ffffff;
+  --btn-secondary-bg: #e8e8ec;
+  --btn-secondary-text: #141416;
 }
 
 * {
@@ -63,6 +70,8 @@ body {
   display: flex;
   overflow: hidden;
   font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Scrollbars */
@@ -87,11 +96,12 @@ body {
 .flex-col { flex-direction: column; }
 .items-center { align-items: center; }
 .justify-between { justify-content: space-between; }
+.justify-end { justify-content: flex-end; }
 .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* Filter Buttons */
 .filter-btn {
-  padding: 6px 14px;
+  padding: 7px 14px;
   border-radius: var(--radius-sm);
   background-color: var(--bg-card);
   border: 1px solid var(--border);
@@ -99,7 +109,7 @@ body {
   font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
   font-family: inherit;
 }
 
@@ -113,6 +123,82 @@ body {
   border-color: var(--border-focus);
   color: var(--text-main);
   font-weight: 600;
+}
+
+/* Standard Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  font-family: inherit;
+  border: 1px solid transparent;
+  transition: opacity 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-primary {
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border: none;
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.btn-secondary {
+  background-color: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover {
+  background-color: var(--bg-card-hover);
+  border-color: var(--border-focus);
+}
+
+.btn-danger {
+  background-color: transparent;
+  color: #ef4444;
+  border: 1px solid transparent;
+}
+
+.btn-danger:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+.icon-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.icon-btn:hover {
+  background-color: var(--bg-card-hover);
+  color: var(--text-main);
+  border-color: var(--border);
+}
+
+.icon-btn.danger:hover {
+  color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.25);
 }
 
 /* Marketplace Layout & Header */
@@ -187,9 +273,9 @@ body {
 
 .models-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
   gap: 16px;
-  margin-top: 20px;
+  margin-top: 18px;
 }
 
 /* Model Card */
@@ -197,23 +283,27 @@ body {
   background-color: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 16px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: all 0.15s ease;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
 .model-card:hover {
   border-color: var(--border-focus);
-  background-color: var(--bg-card-hover);
 }
 
-.model-card-header {
+.model-card-top {
+  margin-bottom: 12px;
+}
+
+.model-header-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 8px;
+  gap: 8px;
+  margin-bottom: 6px;
 }
 
 .model-name {
@@ -222,19 +312,135 @@ body {
   color: var(--text-main);
 }
 
+.model-category-badge {
+  font-size: 0.68rem;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.status-badge {
+  font-size: 0.68rem;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.status-badge.installed {
+  background-color: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #10b981;
+}
+
+.status-badge.available {
+  background-color: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.model-meta-subtitle {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
 .model-desc {
   font-size: 0.8rem;
   color: var(--text-muted);
   line-height: 1.45;
+  margin: 10px 0 14px 0;
+}
+
+/* Variant Pills */
+.variants-container {
   margin-bottom: 14px;
 }
 
-.model-meta {
+.variants-label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.variant-pill {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-family: ui-monospace, monospace;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.variant-pill:hover {
+  color: var(--text-main);
+  border-color: var(--border-focus);
+}
+
+.variant-pill.active {
+  background-color: var(--bg-card-hover);
+  border-color: var(--border-focus);
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+/* Card Bottom Footer */
+.model-card-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding-top: 12px;
   border-top: 1px solid var(--border);
-  font-size: 0.75rem;
+  gap: 8px;
+}
+
+.model-fullname {
+  font-size: 0.72rem;
+  font-family: ui-monospace, monospace;
   color: var(--text-muted);
+}
+
+/* Progress & Modals */
+.progress-bar-track {
+  width: 100%;
+  height: 8px;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background-color: var(--btn-primary-bg);
+  border-radius: 4px;
+  transition: width 0.2s ease;
+}
+
+.progress-bar-fill.error {
+  background-color: #ef4444;
+}
+
+.prompt-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: border-color 0.15s ease;
+}
+
+.prompt-card:hover {
+  border-color: var(--border-focus);
 }

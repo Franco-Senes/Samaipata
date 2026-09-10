@@ -293,11 +293,8 @@ function initFilters() {
 
   filterButtons.forEach(btn => {
     btn.addEventListener('click', () => {
-      filterButtons.forEach(b => {
-        b.className = 'filter-btn px-3.5 py-1.5 rounded-xl text-xs font-medium border border-[#2E2E2E] bg-[#1C1C1C] text-zinc-400 hover:text-zinc-200 transition-colors';
-      });
-
-      btn.className = 'filter-btn active px-3.5 py-1.5 rounded-xl text-xs font-medium border border-[#2E2E2E] bg-[#2A2A2A] text-zinc-100 transition-colors';
+      filterButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
       activeFilter = btn.getAttribute('data-filter');
 
       const promptsSection = document.getElementById('prompts-section');
@@ -335,8 +332,8 @@ async function fetchModels() {
   const grid = document.getElementById('models-grid');
   if (grid) {
     grid.innerHTML = `
-      <div class="col-span-full py-16 text-center text-zinc-500 text-xs">
-        <span class="inline-block animate-spin mr-2">◌</span> Loading models...
+      <div style="grid-column: 1 / -1; padding: 40px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
+        Loading models...
       </div>
     `;
   }
@@ -383,7 +380,6 @@ function renderModels() {
     const key = m.name.toLowerCase();
     const isInstalled = installedModels.some(im => im.name.toLowerCase().startsWith(key) || key.startsWith(im.name.toLowerCase()));
     
-    // Normalize variants
     let variants = [];
     if (Array.isArray(m.variants) && m.variants.length > 0) {
       variants = m.variants.map(v => typeof v === 'string' ? { tag: v, size: 'Auto', context: '128K' } : v);
@@ -478,7 +474,7 @@ function renderModels() {
 
   if (models.length === 0) {
     grid.innerHTML = `
-      <div class="col-span-full py-16 text-center text-zinc-500 text-xs">
+      <div style="grid-column: 1 / -1; padding: 48px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
         No models found matching the selected filters.
       </div>
     `;
@@ -494,39 +490,34 @@ function renderModels() {
     const isPulling = currentPullingModel === fullName;
 
     return `
-      <div class="bg-[#212121] border border-[#2E2E2E] rounded-2xl p-4 sm:p-5 flex flex-col justify-between hover:border-zinc-500 transition-all group">
-        <div>
-          <div class="flex items-start justify-between gap-2 mb-2.5">
+      <div class="model-card">
+        <div class="model-card-top">
+          <div class="model-header-row">
             <div>
-              <div class="flex items-center gap-2">
-                <h3 class="text-sm font-semibold text-zinc-100 group-hover:text-white transition-colors">
-                  ${escapeHtml(m.title || m.name)}
-                </h3>
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#181818] border border-[#2C2C2C] text-zinc-400">
-                  ${escapeHtml(m.category || 'General')}
-                </span>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <h3 class="model-name">${escapeHtml(m.title || m.name)}</h3>
+                <span class="model-category-badge">${escapeHtml(m.category || 'General')}</span>
               </div>
-              <p class="text-[11px] text-zinc-500 mt-0.5">
+              <p class="model-meta-subtitle">
                 ${m.downloads ? `${m.downloads} downloads • ` : ''}${activeVariant.size || 'Local'}
               </p>
             </div>
 
-            ${isThisInstalled
-              ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Installed</span>`
-              : `<span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#181818] text-zinc-500 border border-[#2A2A2A]">Available</span>`
-            }
+            <span class="status-badge ${isThisInstalled ? 'installed' : 'available'}">
+              ${isThisInstalled ? 'Installed' : 'Available'}
+            </span>
           </div>
 
-          <p class="text-xs text-zinc-400 line-clamp-2 leading-relaxed mb-4">
+          <p class="model-desc">
             ${escapeHtml(m.description)}
           </p>
 
           ${m.variants && m.variants.length > 1 ? `
-            <div class="mb-4">
-              <span class="block text-[10px] font-medium text-zinc-500 uppercase tracking-wider mb-1.5">Variants</span>
-              <div class="flex flex-wrap gap-1.5">
+            <div class="variants-container">
+              <span class="variants-label">Variants</span>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px;">
                 ${m.variants.map(v => `
-                  <button type="button" onclick="window.selectVariant('${escapeHtml(m.name)}', '${escapeHtml(v.tag)}')" class="px-2 py-1 rounded-lg text-[11px] font-mono border transition-all ${v.tag === activeTag ? 'bg-[#2A2A2A] text-zinc-100 border-zinc-400' : 'bg-[#181818] text-zinc-400 border-[#2A2A2A] hover:text-zinc-200'}">
+                  <button type="button" onclick="window.selectVariant('${escapeHtml(m.name)}', '${escapeHtml(v.tag)}')" class="variant-pill ${v.tag === activeTag ? 'active' : ''}">
                     ${escapeHtml(v.tag)} (${escapeHtml(v.size)})
                   </button>
                 `).join('')}
@@ -535,25 +526,25 @@ function renderModels() {
           ` : ''}
         </div>
 
-        <div class="pt-3 border-t border-[#2A2A2A] flex items-center justify-between gap-2 mt-2">
-          <span class="text-[11px] text-zinc-500 font-mono">
+        <div class="model-card-footer">
+          <span class="model-fullname">
             ${escapeHtml(fullName)}
           </span>
 
-          <div class="flex items-center gap-1.5">
+          <div style="display: flex; align-items: center; gap: 6px;">
             ${isThisInstalled
               ? `
-                <button onclick="window.useModelInChat('${escapeHtml(fullName)}')" class="px-3 py-1.5 rounded-xl bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-semibold transition-colors flex items-center gap-1 shadow-sm">
+                <button type="button" onclick="window.useModelInChat('${escapeHtml(fullName)}')" class="btn btn-primary">
                   <span>Chat</span>
-                  <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
+                  <i data-lucide="arrow-up-right" style="width: 14px; height: 14px;"></i>
                 </button>
-                <button onclick="window.deleteModel('${escapeHtml(fullName)}')" class="p-1.5 rounded-xl text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-colors text-xs" title="Delete model">
-                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                <button type="button" onclick="window.deleteModel('${escapeHtml(fullName)}')" class="icon-btn danger" title="Delete model">
+                  <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
                 </button>
               `
               : `
-                <button onclick="window.pullModel('${escapeHtml(fullName)}')" ${isPulling ? 'disabled' : ''} class="px-3 py-1.5 rounded-xl bg-[#282828] hover:bg-[#323232] text-zinc-200 text-xs font-medium transition-colors flex items-center gap-1.5">
-                  <i data-lucide="download" class="w-3.5 h-3.5 text-zinc-400"></i>
+                <button type="button" onclick="window.pullModel('${escapeHtml(fullName)}')" ${isPulling ? 'disabled' : ''} class="btn btn-secondary">
+                  <i data-lucide="download" style="width: 14px; height: 14px;"></i>
                   <span>${isPulling ? 'Downloading...' : 'Download'}</span>
                 </button>
               `
@@ -631,31 +622,31 @@ function openPullProgressModal(modelName) {
   if (!modal) {
     modal = document.createElement('div');
     modal.id = 'pull-modal';
-    modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md transition-opacity duration-200';
+    modal.className = 'modal-backdrop';
     document.body.appendChild(modal);
   }
 
   modal.innerHTML = `
-    <div class="bg-[#212121] border border-[#2E2E2E] rounded-3xl p-6 max-w-md w-full shadow-2xl">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-sm font-semibold text-zinc-100 flex items-center gap-2">
-          <i data-lucide="download-cloud" class="w-4 h-4 text-zinc-300"></i>
-          <span>Downloading: <strong class="text-white">${escapeHtml(modelName)}</strong></span>
+    <div class="modal-card" style="max-width: 440px; padding: 24px; flex-direction: column;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+        <h3 style="font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="download-cloud" style="width: 16px; height: 16px;"></i>
+          <span>Downloading: <strong>${escapeHtml(modelName)}</strong></span>
         </h3>
       </div>
 
-      <div class="mb-4">
-        <div class="w-full bg-[#181818] rounded-full h-2 overflow-hidden mb-2 border border-[#282828]">
-          <div id="pull-progress-bar" class="bg-white h-full rounded-full transition-all duration-200" style="width: 0%"></div>
+      <div style="margin-bottom: 16px;">
+        <div class="progress-bar-track">
+          <div id="pull-progress-bar" class="progress-bar-fill" style="width: 0%"></div>
         </div>
-        <div class="flex justify-between text-xs text-zinc-400">
+        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted);">
           <span id="pull-status-text">Starting download...</span>
           <span id="pull-percent-text">0%</span>
         </div>
       </div>
 
-      <div id="pull-modal-actions" class="flex justify-end pt-2">
-        <button id="btn-close-pull" class="hidden px-4 py-2 rounded-xl bg-[#282828] hover:bg-[#323232] text-xs text-zinc-200 transition-colors" onclick="document.getElementById('pull-modal').remove()">
+      <div id="pull-modal-actions" style="display: flex; justify-content: flex-end; padding-top: 8px;">
+        <button id="btn-close-pull" class="btn btn-secondary hidden" onclick="document.getElementById('pull-modal').remove()">
           Close
         </button>
       </div>
@@ -688,12 +679,12 @@ function completePullProgress(success, msg) {
 
   if (bar) {
     bar.style.width = '100%';
-    bar.className = success ? 'bg-white h-full rounded-full' : 'bg-red-500 h-full rounded-full';
+    if (!success) bar.classList.add('error');
   }
 
   if (statusText) {
     statusText.textContent = msg;
-    statusText.className = success ? 'text-xs text-zinc-200 font-medium' : 'text-xs text-red-400 font-medium';
+    statusText.style.color = success ? 'var(--text-main)' : '#ef4444';
   }
 
   if (closeBtn) {
@@ -776,7 +767,7 @@ function renderPrompts() {
 
   if (prompts.length === 0) {
     container.innerHTML = `
-      <div class="col-span-full py-12 text-center text-zinc-500 text-xs">
+      <div style="grid-column: 1 / -1; padding: 48px; text-align: center; color: var(--text-muted); font-size: 0.85rem;">
         No saved System Prompts found. Create your first one!
       </div>
     `;
@@ -784,29 +775,29 @@ function renderPrompts() {
   }
 
   container.innerHTML = prompts.map(p => `
-    <div class="bg-[#212121] border border-[#2E2E2E] rounded-2xl p-5 flex flex-col justify-between hover:border-zinc-500 transition-all">
+    <div class="prompt-card">
       <div>
-        <div class="flex items-center justify-between mb-2">
-          <h3 class="text-sm font-semibold text-zinc-100">${escapeHtml(p.title)}</h3>
-          <div class="flex items-center gap-1.5">
-            <button onclick="window.editPrompt('${p.id}')" class="p-1 rounded text-zinc-400 hover:text-zinc-200" title="Edit">
-              <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+          <h3 style="font-size: 0.95rem; font-weight: 600; color: var(--text-main);">${escapeHtml(p.title)}</h3>
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <button type="button" onclick="window.editPrompt('${p.id}')" class="icon-btn" title="Edit">
+              <i data-lucide="edit-2" style="width: 14px; height: 14px;"></i>
             </button>
-            <button onclick="window.deletePrompt('${p.id}')" class="p-1 rounded text-red-400 hover:text-red-300" title="Delete">
-              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            <button type="button" onclick="window.deletePrompt('${p.id}')" class="icon-btn danger" title="Delete">
+              <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
             </button>
           </div>
         </div>
-        <p class="text-xs text-zinc-400 mb-3">${escapeHtml(p.description || '')}</p>
-        <div class="bg-[#181818] p-3 rounded-xl border border-[#2A2A2A] text-[11px] text-zinc-400 font-mono line-clamp-3 mb-4">
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">${escapeHtml(p.description || '')}</p>
+        <div style="background: var(--bg-input); padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 0.75rem; color: var(--text-muted); font-family: monospace; margin-bottom: 14px; max-height: 80px; overflow-y: auto;">
           ${escapeHtml(p.prompt)}
         </div>
       </div>
 
-      <div class="pt-3 border-t border-[#2A2A2A] flex justify-end">
-        <button onclick="window.activatePrompt('${p.id}')" class="px-3.5 py-1.5 rounded-xl bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-sm">
+      <div style="padding-top: 12px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end;">
+        <button type="button" onclick="window.activatePrompt('${p.id}')" class="btn btn-primary">
           <span>Use in Chat</span>
-          <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
+          <i data-lucide="arrow-up-right" style="width: 14px; height: 14px;"></i>
         </button>
       </div>
     </div>
@@ -820,36 +811,36 @@ window.openPromptEditor = function(promptData = null) {
   if (!modal) {
     modal = document.createElement('div');
     modal.id = 'prompt-editor-modal';
-    modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md';
+    modal.className = 'modal-backdrop';
     document.body.appendChild(modal);
   }
 
   modal.innerHTML = `
-    <div class="bg-[#212121] border border-[#2E2E2E] rounded-3xl p-6 max-w-lg w-full shadow-2xl">
-      <h3 class="text-base font-semibold text-zinc-100 mb-4">
+    <div class="modal-card" style="max-width: 500px; padding: 24px; flex-direction: column;">
+      <h3 style="font-size: 1.05rem; font-weight: 600; margin-bottom: 16px;">
         ${promptData ? 'Edit System Prompt' : 'New System Prompt'}
       </h3>
 
-      <form id="form-prompt" class="space-y-4">
+      <form id="form-prompt" style="display: flex; flex-direction: column; gap: 12px;">
         <input type="hidden" id="prompt-id" value="${promptData ? promptData.id : ''}" />
         <div>
-          <label class="block text-xs font-medium text-zinc-400 mb-1">Title</label>
-          <input type="text" id="prompt-title" required value="${promptData ? escapeHtml(promptData.title) : ''}" placeholder="e.g. Python Assistant" class="w-full px-3.5 py-2 rounded-xl bg-[#181818] border border-[#2E2E2E] text-xs text-zinc-100 focus:outline-none focus:border-zinc-500" />
+          <label style="display: block; font-size: 0.78rem; font-weight: 500; color: var(--text-muted); margin-bottom: 6px;">Title</label>
+          <input type="text" id="prompt-title" required value="${promptData ? escapeHtml(promptData.title) : ''}" placeholder="e.g. Python Assistant" style="width: 100%; background: var(--bg-input); border: 1px solid var(--border); padding: 8px 12px; border-radius: var(--radius-sm); color: var(--text-main); font-size: 0.82rem;" />
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-zinc-400 mb-1">Short Description</label>
-          <input type="text" id="prompt-desc" value="${promptData ? escapeHtml(promptData.description) : ''}" placeholder="e.g. Specialized in code refactoring" class="w-full px-3.5 py-2 rounded-xl bg-[#181818] border border-[#2E2E2E] text-xs text-zinc-100 focus:outline-none focus:border-zinc-500" />
+          <label style="display: block; font-size: 0.78rem; font-weight: 500; color: var(--text-muted); margin-bottom: 6px;">Short Description</label>
+          <input type="text" id="prompt-desc" value="${promptData ? escapeHtml(promptData.description) : ''}" placeholder="e.g. Specialized in code refactoring" style="width: 100%; background: var(--bg-input); border: 1px solid var(--border); padding: 8px 12px; border-radius: var(--radius-sm); color: var(--text-main); font-size: 0.82rem;" />
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-zinc-400 mb-1">System Instructions</label>
-          <textarea id="prompt-content" rows="5" required placeholder="Write your system instructions here..." class="w-full px-3.5 py-2 rounded-xl bg-[#181818] border border-[#2E2E2E] text-xs text-zinc-100 focus:outline-none focus:border-zinc-500 resize-none font-mono">${promptData ? escapeHtml(promptData.prompt) : ''}</textarea>
+          <label style="display: block; font-size: 0.78rem; font-weight: 500; color: var(--text-muted); margin-bottom: 6px;">System Instructions</label>
+          <textarea id="prompt-content" rows="6" required placeholder="Write your system instructions here..." style="width: 100%; background: var(--bg-input); border: 1px solid var(--border); padding: 8px 12px; border-radius: var(--radius-sm); color: var(--text-main); font-size: 0.82rem; font-family: monospace; resize: none;">${promptData ? escapeHtml(promptData.prompt) : ''}</textarea>
         </div>
 
-        <div class="flex justify-end gap-2 pt-2">
-          <button type="button" onclick="document.getElementById('prompt-editor-modal').remove()" class="px-4 py-2 rounded-xl bg-[#282828] hover:bg-[#323232] text-zinc-300 text-xs">Cancel</button>
-          <button type="submit" class="px-4 py-2 rounded-xl bg-white hover:bg-zinc-200 text-zinc-950 text-xs font-semibold">Save</button>
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px;">
+          <button type="button" onclick="document.getElementById('prompt-editor-modal').remove()" class="btn btn-secondary">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
         </div>
       </form>
     </div>
