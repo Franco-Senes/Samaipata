@@ -322,11 +322,11 @@ function renderModelPickerDropdown() {
     }
     if (dropdown) {
       dropdown.innerHTML = `
-        <div class="p-3 text-center text-xs text-zinc-400 space-y-2">
-          <p class="font-medium text-zinc-300">No models setup</p>
-          <p class="text-[11px] text-zinc-500">Neither Ollama nor Hack Club AI is connected.</p>
-          <button type="button" id="btn-dropdown-setup-ai" class="w-full py-1.5 px-2 bg-[#2A2A2A] hover:bg-[#333] border border-[#3A3A3A] text-zinc-200 rounded-xl text-xs font-medium transition-colors flex items-center justify-center gap-1.5">
-            <i data-lucide="settings" class="w-3.5 h-3.5 text-zinc-400"></i>
+        <div style="padding: 12px; text-align: center; font-size: 0.8rem; color: var(--text-muted);">
+          <p style="font-weight: 600; color: var(--text-main); margin-bottom: 4px;">No models setup</p>
+          <p style="font-size: 0.72rem; margin-bottom: 10px;">Neither Ollama nor Hack Club AI is connected.</p>
+          <button type="button" id="btn-dropdown-setup-ai" class="btn btn-primary" style="width: 100%; font-size: 0.78rem; padding: 6px 10px;">
+            <i data-lucide="settings" style="width: 14px; height: 14px;"></i>
             <span>Setup AI Services</span>
           </button>
         </div>
@@ -367,16 +367,20 @@ function renderModelPickerDropdown() {
 
   if (!dropdown) return;
 
-  dropdown.innerHTML = installedModels.map(m => {
-    const displayName = m.displayName || (m.is_hackclub ? `${m.name} (Hack Club)` : m.name);
-    const isSelected = m.name === currentModel;
-    return `
-      <button type="button" class="w-full text-left px-3 py-2 text-xs text-zinc-300 hover:bg-[#2A2A2A] hover:text-white rounded-xl flex items-center justify-between transition-colors ${isSelected ? 'bg-blue-600/15 text-blue-400 font-medium' : ''}" data-model="${escapeHtml(m.name)}">
-        <span class="truncate pr-2">${escapeHtml(displayName)}</span>
-        ${isSelected ? '<i data-lucide="check" class="w-3.5 h-3.5 text-blue-500 shrink-0"></i>' : ''}
-      </button>
-    `;
-  }).join('');
+  dropdown.innerHTML = `
+    <div style="display: flex; flex-direction: column; gap: 2px;">
+      ${installedModels.map(m => {
+        const displayName = m.displayName || (m.is_hackclub ? `${m.name} (Hack Club)` : m.name);
+        const isSelected = m.name === currentModel;
+        return `
+          <button type="button" class="model-option-btn ${isSelected ? 'selected' : ''}" data-model="${escapeHtml(m.name)}">
+            <span class="truncate" style="flex: 1;">${escapeHtml(displayName)}</span>
+            ${isSelected ? '<i data-lucide="check" style="width: 14px; height: 14px; flex-shrink: 0; margin-left: 8px;"></i>' : ''}
+          </button>
+        `;
+      }).join('')}
+    </div>
+  `;
 
   dropdown.querySelectorAll('button[data-model]').forEach(btn => {
     btn.addEventListener('click', () => {

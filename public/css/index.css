@@ -431,12 +431,49 @@ header {
   font-size: 0.82rem;
   font-weight: 500;
   cursor: pointer;
-  transition: border-color 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
   font-family: inherit;
 }
 
 .model-pill:hover {
+  background-color: var(--bg-card-hover);
   border-color: var(--border-focus);
+}
+
+#model-picker-dropdown {
+  width: 280px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.model-option-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  margin-bottom: 2px;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.model-option-btn:hover {
+  background-color: var(--bg-card-hover);
+  border-color: var(--border);
+}
+
+.model-option-btn.selected {
+  background-color: var(--bg-card-hover);
+  border-color: var(--border-focus);
+  color: var(--text-main);
+  font-weight: 600;
 }
 
 /* 6. Hero / Welcome Screen */
